@@ -193,7 +193,7 @@ public class Generator {
             FileWriter fstream = new FileWriter(workdir + File.separator + out_classdir + tablename + tbl_s_ext,
                 StandardCharsets.UTF_8);
             BufferedWriter out = new BufferedWriter(fstream);
-            out.write("CREATE TABLE IF NOT EXISTS "+tablename+" (");
+            out.write("CREATE TABLE IF NOT EXISTS \""+tablename+"\" (");
             out.newLine();
             out.close();
         }
@@ -296,7 +296,6 @@ public class Generator {
             e.printStackTrace();
         }
 
-        append_to_sql(workdir, tablename, "  \""+primary_key_column_name+"\" "+primary_key_column_sqlitetype+",");
         append_to_sql(workdir, tablename, "  PRIMARY KEY(\""+primary_key_column_name+"\" "+primary_key_column_autoincr_if_needed+")");
         append_to_sql(workdir, tablename, ");");
     }
@@ -571,13 +570,27 @@ public class Generator {
         else
         {
             append_to_table(workdir, table_name, "    @PrimaryKey");
+            column_num++;
+            // -----------
+            String comma = "";
+            if (column_num > 1) {comma = ",";}
+            tbl_insert_sub01 += "                    + \""+comma+""+column_name+"\"" + "\n";
+            tbl_insert_sub02 += "                    + \""+comma+"?"+column_num+"\"" + "\n";
+            // -----------
+            tbl_insert_sub03 += "            insert_pstmt.set"+javatype_firstupper+"("+column_num+", this."+column_name+");" + "\n";
         }
         append_to_table(workdir, table_name, "    public " + p5.javatype + " "+column_name+";");
         append_to_table(workdir, table_name, "");
 
+        append_to_sql(workdir, table_name, "  \""+column_name+"\" "+primary_key_column_sqlitetype+",");
+
         tbl_deepcopy += "        out."+column_name+" = in."+column_name+";" + "\n";
         tbl_tostring += "\""+column_name+"=\" + "+column_name+"";
         tbl_tolist += "                out."+column_name+" = rs.get"+javatype_firstupper+"(\""+column_name+"\");" + "\n";
+
+        add_equal_func(table_name, column_name, p5, javatype_firstupper);
+        add_orderby_func(table_name, column_name, p5, javatype_firstupper);
+        add_set_func(table_name, column_name, p5, javatype_firstupper);
 
         return(column_name);
     }
