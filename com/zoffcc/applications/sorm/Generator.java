@@ -215,11 +215,11 @@ public class Generator {
             final String tbl21 = read_text_file(orma_global_tbl21);
             tbl_tolist += read_text_file(orma_global_tbl_tolist_02);
             tbl_insert += tbl_insert_sub01;
-            tbl_insert += "                    \")\" +" + "\n";
+            tbl_insert += "                    + \")\" +" + "\n";
             tbl_insert += "                    \"values\" +" + "\n";
-            tbl_insert += "                    \"(\" +" + "\n";
+            tbl_insert += "                    \"(\"" + "\n";
             tbl_insert += tbl_insert_sub02;
-            tbl_insert += "                    \")\";" + "\n";
+            tbl_insert += "                    + \")\";" + "\n";
             tbl_insert += "" + "\n";
             tbl_insert += "            insert_pstmt = sqldb.prepareStatement(insert_pstmt_sql);" + "\n";
             tbl_insert += "            insert_pstmt.clearParameters();" + "\n";
