@@ -392,13 +392,11 @@ public class Generator {
 			reader = new BufferedReader(new FileReader(workdir + File.separator + infilename));
 			String line = reader.readLine();
 
+            boolean ignore_line = true;
 			while (line != null) {
-                if (line.contains("______@@SORMA_END@@______"))
+                if (line.trim().contains("@Table"))
                 {
-                    break;
-                }
-                else if (line.trim().contains("@Table"))
-                {
+                    ignore_line = false;
                     line = reader.readLine();
                     while(line.trim().startsWith("@"))
                     {
@@ -407,6 +405,15 @@ public class Generator {
                     table_name = line.trim().substring(line.trim().lastIndexOf(" ") + 1);
                     System.out.println("Table: " + table_name);
                     process_tablename(workdir, orma_global_out, table_name);
+                }
+                else if (ignore_line)
+                {
+                    line = reader.readLine();
+                    continue;
+                }
+                else if (line.contains("______@@SORMA_END@@______"))
+                {
+                    break;
                 }
                 else if (line.trim().contains("@PrimaryKey("))
                 {
