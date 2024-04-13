@@ -39,6 +39,9 @@ public class Generator {
     static String tbl_tostring = "";
     static String tbl_tolist = "";
     static int column_num = 0;
+    static String primary_key_column_name = "";
+    static String primary_key_column_autoincr_if_needed = "";
+    static String primary_key_column_sqlitetype = "";
     static String tbl_insert = "";
     static String tbl_insert_sub01 = "";
     static String tbl_insert_sub02 = "";
@@ -293,8 +296,8 @@ public class Generator {
             e.printStackTrace();
         }
 
-        append_to_sql(workdir, tablename, "  \"id\" INTEGER,");
-        append_to_sql(workdir, tablename, "  PRIMARY KEY(\"id\" AUTOINCREMENT)");
+        append_to_sql(workdir, tablename, "  \""+primary_key_column_name+"\" "+primary_key_column_sqlitetype+",");
+        append_to_sql(workdir, tablename, "  PRIMARY KEY(\""+primary_key_column_name+"\" "+primary_key_column_autoincr_if_needed+")");
         append_to_sql(workdir, tablename, ");");
     }
 
@@ -387,6 +390,9 @@ public class Generator {
     {
         System.out.println("generating: " + workdir + File.separator + out_classdir + outfilename);
         String table_name = "";
+        primary_key_column_name = "";
+        primary_key_column_autoincr_if_needed = "";
+        primary_key_column_sqlitetype = "";
         BufferedReader reader;
 		try {
 			reader = new BufferedReader(new FileReader(workdir + File.separator + infilename));
@@ -394,6 +400,7 @@ public class Generator {
 
             boolean ignore_line = true;
 			while (line != null) {
+                // System.out.println("LLLLLLL: " + line.trim());
                 if (line.trim().contains("@Table"))
                 {
                     ignore_line = false;
@@ -415,24 +422,18 @@ public class Generator {
                 {
                     break;
                 }
-                else if (line.trim().contains("@PrimaryKey("))
+                else if (line.trim().contains("@PrimaryKey"))
                 {
                     line = reader.readLine();
                     while(line.trim().startsWith("@"))
                     {
                         line = reader.readLine();
                     }
-                    // System.out.println("PrimaryKey: " + line.trim());
-                    process_primary_key(workdir, infilename, outfilename,
+                    System.out.println("PrimaryKey: " + line.trim());
+                    primary_key_column_name = process_primary_key(workdir, infilename, outfilename, table_name,
                         line.trim());
-                    append_to_table(workdir, table_name, "    @PrimaryKey(autoincrement = true, auto = true)");
-                    append_to_table(workdir, table_name, "    public long id; // uniqe id");
-                    append_to_table(workdir, table_name, "");
-                    tbl_deepcopy += "        out.id = in.id;" + "\n";
-                    tbl_tostring += "\"id=\" + id";
-                    tbl_tolist += "                out.id = rs.getLong(\"id\");" + "\n";
                 }
-                else if (line.trim().contains("@Column("))
+                else if (line.trim().contains("@Column"))
                 {
                     line = reader.readLine();
                     while(line.trim().startsWith("@"))
@@ -549,12 +550,36 @@ public class Generator {
         return COLTYPE.UNKNOWN;
     }
 
-    static void process_primary_key(final String workdir, final String infilename, final String outfilename, final String p)
+    static String process_primary_key(final String workdir, final String infilename,
+                                    final String outfilename, final String table_name,
+                                    final String p)
     {
         final String p2 = remove_public(p);
         final String p3 = remove_type(p2);
-        final String p4 = get_name(p3);
-        System.out.println("P: " + p4 + " type: " + get_type(p2).name);
+        final String column_name = get_name(p3);
+        final COLTYPE p5 = get_type(p2);
+        final String javatype_firstupper = p5.javatype.substring(0,1).toUpperCase() + p5.javatype.substring(1);
+        System.out.println("P: " + column_name + " type: " + p5.name);
+
+        primary_key_column_autoincr_if_needed = "";
+        primary_key_column_sqlitetype = p5.sqlitetype;
+        if ((p5 == COLTYPE.INT) || (p5 == COLTYPE.LONG))
+        {
+            append_to_table(workdir, table_name, "    @PrimaryKey(autoincrement = true, auto = true)");
+            primary_key_column_autoincr_if_needed = "AUTOINCREMENT";
+        }
+        else
+        {
+            append_to_table(workdir, table_name, "    @PrimaryKey");
+        }
+        append_to_table(workdir, table_name, "    public " + p5.javatype + " "+column_name+";");
+        append_to_table(workdir, table_name, "");
+
+        tbl_deepcopy += "        out."+column_name+" = in."+column_name+";" + "\n";
+        tbl_tostring += "\""+column_name+"=\" + "+column_name+"";
+        tbl_tolist += "                out."+column_name+" = rs.get"+javatype_firstupper+"(\""+column_name+"\");" + "\n";
+
+        return(column_name);
     }
 
     static void process_column(final String workdir, final String infilename, final String outfilename, final String c, final String table_name)
