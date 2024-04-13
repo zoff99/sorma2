@@ -586,27 +586,3 @@ public class OrmaDatabase
         }
     }
 
-    // ______@@0001@@______
-
-/*
-    public FriendList selectFromFriendList()
-    {
-        FriendList ret = new FriendList();
-        ret.sql_start = "SELECT * FROM FriendList";
-        return ret;
-    }
-
-    public long insertIntoFriendList(FriendList f)
-    {
-        return f.insert();
-    }
-
-    public FriendList updateFriendList()
-    {
-        FriendList ret = new FriendList();
-        ret.sql_start = "UPDATE FriendList";
-        return ret;
-    }
-*/
-}
-

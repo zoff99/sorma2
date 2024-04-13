@@ -1,0 +1,18 @@
+    public @@@TABLE@@@ selectFrom@@@TABLE@@@()
+    {
+        @@@TABLE@@@ ret = new @@@TABLE@@@();
+        ret.sql_start = "SELECT * FROM @@@TABLE@@@";
+        return ret;
+    }
+
+    public long insertInto@@@TABLE@@@(@@@TABLE@@@ f)
+    {
+        return f.insert();
+    }
+
+    public @@@TABLE@@@ update@@@TABLE@@@()
+    {
+        @@@TABLE@@@ ret = new @@@TABLE@@@();
+        ret.sql_start = "UPDATE @@@TABLE@@@";
+        return ret;
+    }
