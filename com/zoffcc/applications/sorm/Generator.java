@@ -293,6 +293,8 @@ public class Generator {
             e.printStackTrace();
         }
 
+        append_to_sql(workdir, tablename, "  \"id\" INTEGER,");
+        append_to_sql(workdir, tablename, "  PRIMARY KEY(\"id\" AUTOINCREMENT)");
         append_to_sql(workdir, tablename, ");");
     }
 
@@ -422,8 +424,6 @@ public class Generator {
                     tbl_deepcopy += "        out.id = in.id;" + "\n";
                     tbl_tostring += "\"id=\" + id";
                     tbl_tolist += "                out.id = rs.getLong(\"id\");" + "\n";
-                    append_to_sql(workdir, table_name, "  \"id\" INTEGER,");
-                    append_to_sql(workdir, table_name, "  PRIMARY KEY(\"id\" AUTOINCREMENT),");
                 }
                 else if (line.trim().contains("@Column("))
                 {
