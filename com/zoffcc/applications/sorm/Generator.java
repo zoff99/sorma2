@@ -18,6 +18,7 @@ public class Generator {
     static final String Version = "0.99.0";
     static final String prefix = "_sorm_";
     static final String tbl_f_ext = ".java";
+    static final String tbl_s_ext = ".sql";
     static final String LOGGER_DB_PREFIX = "DB.";
     // on Android the logger tag length is limited
     static final int MAX_LOGGER_PRE_LEN = (20 - LOGGER_DB_PREFIX.length());
@@ -52,6 +53,7 @@ public class Generator {
         private int value;
         private String name;
         private String javatype;
+        private String sqlitetype;
         private COLTYPE(int value)
         {
             this.value = value;
@@ -65,6 +67,11 @@ public class Generator {
             if (value == 3) { this.javatype = "String"; };
             if (value == 4) { this.javatype = "boolean"; };
             if (value == 999) { this.javatype = "Object"; };
+            if (value == 1) { this.sqlitetype = "INTEGER"; };
+            if (value == 2) { this.sqlitetype = "INTEGER"; };
+            if (value == 3) { this.sqlitetype = "TEXT"; };
+            if (value == 4) { this.sqlitetype = "BOOLEAN"; };
+            if (value == 999) { this.sqlitetype = "TEXT"; };
         }
     }
 
@@ -180,6 +187,22 @@ public class Generator {
         {
             File d = new File(workdir + File.separator + out_classdir);
             d.mkdirs();
+            FileWriter fstream = new FileWriter(workdir + File.separator + out_classdir + tablename + tbl_s_ext,
+                StandardCharsets.UTF_8);
+            BufferedWriter out = new BufferedWriter(fstream);
+            out.write("CREATE TABLE IF NOT EXISTS "+tablename+" (");
+            out.newLine();
+            out.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
+            File d = new File(workdir + File.separator + out_classdir);
+            d.mkdirs();
             final String tbl01 = read_text_file(orma_global_tbl01);
             FileWriter fstream = new FileWriter(workdir + File.separator + out_classdir + tablename + tbl_f_ext,
                 StandardCharsets.UTF_8);
@@ -269,6 +292,8 @@ public class Generator {
         {
             e.printStackTrace();
         }
+
+        append_to_sql(workdir, tablename, ");");
     }
 
     static void append_to_table(final String workdir, final String tablename, final String txt_line)
@@ -290,6 +315,27 @@ public class Generator {
             e.printStackTrace();
         }
     }
+
+    static void append_to_sql(final String workdir, final String tablename, final String txt_line)
+    {
+        // System.out.println("appending to table: " + workdir + File.separator + out_classdir + tablename + tbl_s_ext);
+        try
+        {
+            File d = new File(workdir + File.separator + out_classdir);
+            d.mkdirs();
+            FileWriter fstream = new FileWriter(workdir + File.separator + out_classdir + tablename + tbl_s_ext,
+                StandardCharsets.UTF_8, true); // append!
+            BufferedWriter out = new BufferedWriter(fstream);
+            out.write(txt_line);
+            out.newLine();
+            out.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
 
     static void finish_orma(final String workdir, final String outfilename)
     {
@@ -323,7 +369,7 @@ public class Generator {
             FileWriter fstream = new FileWriter(workdir + File.separator + out_classdir + outfilename,
                 StandardCharsets.UTF_8, true); // append!
             BufferedWriter out = new BufferedWriter(fstream);
-            out.write(t1.replace("@@@TABLE@@@", tablename));
+            out.write(t1.replace("__@@@TABLE@@@__", tablename));
             out.newLine();
             out.close();
         }
@@ -376,6 +422,8 @@ public class Generator {
                     tbl_deepcopy += "        out.id = in.id;" + "\n";
                     tbl_tostring += "\"id=\" + id";
                     tbl_tolist += "                out.id = rs.getLong(\"id\");" + "\n";
+                    append_to_sql(workdir, table_name, "  \"id\" INTEGER,");
+                    append_to_sql(workdir, table_name, "  PRIMARY KEY(\"id\" AUTOINCREMENT),");
                 }
                 else if (line.trim().contains("@Column("))
                 {
@@ -513,6 +561,9 @@ public class Generator {
         append_to_table(workdir, table_name, "    @Column(indexed = true, helpers = Column.Helpers.ALL)");
         append_to_table(workdir, table_name, "    public " + c5.javatype + " " + column_name + ";");
         append_to_table(workdir, table_name, "");
+
+        append_to_sql(workdir, table_name, "  \""+column_name+"\" "+c5.sqlitetype+",");
+
         column_num++;
         final String javatype_firstupper = c5.javatype.substring(0,1).toUpperCase() + c5.javatype.substring(1);
         tbl_deepcopy += "        out."+column_name+" = in."+column_name+";" + "\n";

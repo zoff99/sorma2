@@ -1,26 +1,26 @@
 
-    public @@@TABLE@@@ selectFrom@@@TABLE@@@()
+    public __@@@TABLE@@@__ selectFrom__@@@TABLE@@@__()
     {
-        @@@TABLE@@@ ret = new @@@TABLE@@@();
-        ret.sql_start = "SELECT * FROM @@@TABLE@@@";
+        __@@@TABLE@@@__ ret = new __@@@TABLE@@@__();
+        ret.sql_start = "SELECT * FROM __@@@TABLE@@@__";
         return ret;
     }
 
-    public long insertInto@@@TABLE@@@(@@@TABLE@@@ f)
+    public long insertInto__@@@TABLE@@@__(__@@@TABLE@@@__ obj)
     {
-        return f.insert();
+        return obj.insert();
     }
 
-    public @@@TABLE@@@ update@@@TABLE@@@()
+    public __@@@TABLE@@@__ update__@@@TABLE@@@__()
     {
-        @@@TABLE@@@ ret = new @@@TABLE@@@();
-        ret.sql_start = "UPDATE @@@TABLE@@@";
+        __@@@TABLE@@@__ ret = new __@@@TABLE@@@__();
+        ret.sql_start = "UPDATE __@@@TABLE@@@__";
         return ret;
     }
 
-    public @@@TABLE@@@ deleteFrom@@@TABLE@@@()
+    public __@@@TABLE@@@__ deleteFrom__@@@TABLE@@@__()
     {
-        @@@TABLE@@@ ret = new @@@TABLE@@@();
-        ret.sql_start = "DELETE FROM @@@TABLE@@@";
+        __@@@TABLE@@@__ ret = new __@@@TABLE@@@__();
+        ret.sql_start = "DELETE FROM __@@@TABLE@@@__";
         return ret;
     }
