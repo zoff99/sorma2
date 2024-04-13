@@ -542,6 +542,21 @@ public class Generator {
 
     static void add_set_func(final String table_name, final String column_name, final COLTYPE ctype, final String javatype_firstupper)
     {
+        tbl_setfuncs  += "    public "+table_name+" "+column_name+"("+ctype.javatype+" "+column_name+")" + "\n";
+        tbl_setfuncs  += "    {" + "\n";
+        tbl_setfuncs  += "        if (this.sql_set.equals(\"\"))" + "\n";
+        tbl_setfuncs  += "        {" + "\n";
+        tbl_setfuncs  += "            this.sql_set = \" set \";" + "\n";
+        tbl_setfuncs  += "        }" + "\n";
+        tbl_setfuncs  += "        else" + "\n";
+        tbl_setfuncs  += "        {" + "\n";
+        tbl_setfuncs  += "            this.sql_set = this.sql_set + \" , \";" + "\n";
+        tbl_setfuncs  += "        }" + "\n";
+        tbl_setfuncs  += "        this.sql_set = this.sql_set + \" "+column_name+"=?\" + (BINDVAR_OFFSET_SET + bind_set_count) + \" \";" + "\n";
+        tbl_setfuncs  += "        bind_set_vars.add(new OrmaBindvar(BINDVAR_TYPE_"+javatype_firstupper+", "+column_name+"));" + "\n";
+        tbl_setfuncs  += "        bind_set_count++;" + "\n";
+        tbl_setfuncs  += "        return this;" + "\n";
+        tbl_setfuncs  += "    }" + "\n";
         tbl_setfuncs  += "" + "\n";
     }
 
