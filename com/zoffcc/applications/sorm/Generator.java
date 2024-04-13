@@ -39,6 +39,9 @@ public class Generator {
     static String tbl_insert_sub01 = "";
     static String tbl_insert_sub02 = "";
     static String tbl_insert_sub03 = "";
+    static String tbl_equalfuncs = "";
+    static String tbl_orderbyfuncs = "";
+    static String tbl_setfuncs = "";
 
     enum COLTYPE
     {
@@ -142,6 +145,9 @@ public class Generator {
         tbl_insert_sub01 = "";
         tbl_insert_sub02 = "";
         tbl_insert_sub03 = "";
+        tbl_equalfuncs =   "    // ----------------- Eq funcs ----------------------- //" + "\n";
+        tbl_orderbyfuncs = "    // ----------------- OrderBy funcs ------------------ //" + "\n";
+        tbl_setfuncs =     "    // ----------------- Set funcs ---------------------- //" + "\n";
         column_num = 0;
 
         try
@@ -220,6 +226,13 @@ public class Generator {
 
             out.newLine();
             out.write(tbl21);
+
+            out.newLine();
+            out.write(tbl_setfuncs);
+            out.newLine();
+            out.write(tbl_equalfuncs);
+            out.newLine();
+            out.write(tbl_orderbyfuncs);
 
             out.newLine();
             out.write(tbl99);
@@ -486,5 +499,61 @@ public class Generator {
         tbl_insert_sub02 += "                    + \""+comma+"?"+column_num+"\"" + "\n";
         // -----------
         tbl_insert_sub03 += "            insert_pstmt.set"+javatype_firstupper+"("+column_num+", this."+column_name+");" + "\n";
+
+        add_equal_func(table_name, column_name, c5, javatype_firstupper);
+        add_orderby_func(table_name, column_name, c5, javatype_firstupper);
+        add_set_func(table_name, column_name, c5, javatype_firstupper);
+    }
+
+    static void add_orderby_func(final String table_name, final String column_name, final COLTYPE ctype, final String javatype_firstupper)
+    {
+        final String column_name_firstupper = column_name.substring(0,1).toUpperCase() + column_name.substring(1);
+
+        tbl_orderbyfuncs  += "    public "+table_name+" orderBy"+column_name_firstupper+"Asc()" + "\n";
+        tbl_orderbyfuncs  += "    {" + "\n";
+        tbl_orderbyfuncs  += "        if (this.sql_orderby.equals(\"\"))" + "\n";
+        tbl_orderbyfuncs  += "        {" + "\n";
+        tbl_orderbyfuncs  += "            this.sql_orderby = \" order by \";" + "\n";
+        tbl_orderbyfuncs  += "        }" + "\n";
+        tbl_orderbyfuncs  += "        else" + "\n";
+        tbl_orderbyfuncs  += "        {" + "\n";
+        tbl_orderbyfuncs  += "            this.sql_orderby = this.sql_orderby + \" , \";" + "\n";
+        tbl_orderbyfuncs  += "        }" + "\n";
+        tbl_orderbyfuncs  += "        this.sql_orderby = this.sql_orderby + \" "+column_name+" ASC \";" + "\n";
+        tbl_orderbyfuncs  += "        return this;" + "\n";
+        tbl_orderbyfuncs  += "    }" + "\n";
+        tbl_orderbyfuncs  += "" + "\n";
+
+        tbl_orderbyfuncs  += "    public "+table_name+" orderBy"+column_name_firstupper+"Desc()" + "\n";
+        tbl_orderbyfuncs  += "    {" + "\n";
+        tbl_orderbyfuncs  += "        if (this.sql_orderby.equals(\"\"))" + "\n";
+        tbl_orderbyfuncs  += "        {" + "\n";
+        tbl_orderbyfuncs  += "            this.sql_orderby = \" order by \";" + "\n";
+        tbl_orderbyfuncs  += "        }" + "\n";
+        tbl_orderbyfuncs  += "        else" + "\n";
+        tbl_orderbyfuncs  += "        {" + "\n";
+        tbl_orderbyfuncs  += "            this.sql_orderby = this.sql_orderby + \" , \";" + "\n";
+        tbl_orderbyfuncs  += "        }" + "\n";
+        tbl_orderbyfuncs  += "        this.sql_orderby = this.sql_orderby + \" "+column_name+" DESC \";" + "\n";
+        tbl_orderbyfuncs  += "        return this;" + "\n";
+        tbl_orderbyfuncs  += "    }" + "\n";
+        tbl_orderbyfuncs  += "" + "\n";
+    }
+
+    static void add_set_func(final String table_name, final String column_name, final COLTYPE ctype, final String javatype_firstupper)
+    {
+        tbl_setfuncs  += "" + "\n";
+    }
+
+    static void add_equal_func(final String table_name, final String column_name, final COLTYPE ctype, final String javatype_firstupper)
+    {
+        tbl_equalfuncs  += "    public "+table_name+" "+column_name+"Eq("+ctype.javatype+" "+column_name+")" + "\n";
+        tbl_equalfuncs  += "    {" + "\n";
+        tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+"=?\" + (BINDVAR_OFFSET_WHERE + bind_where_count) + \" \";" + "\n";
+        tbl_equalfuncs  += "        bind_where_vars.add(new OrmaBindvar(BINDVAR_TYPE_"+javatype_firstupper+", "+column_name+"));" + "\n";
+        tbl_equalfuncs  += "        bind_where_count++;" + "\n";
+        tbl_equalfuncs  += "        return this;" + "\n";
+        tbl_equalfuncs  += "    }" + "\n";
+        tbl_equalfuncs  += "" + "\n";
     }
 }
