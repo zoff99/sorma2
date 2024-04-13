@@ -8,6 +8,9 @@ import java.io.FileWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 public class Generator {
@@ -85,6 +88,29 @@ public class Generator {
             }
 
             finish_orma(workdir, orma_global_out);
+
+            String[] list = new String[]{"Column.java","Index.java","Log.java","Nullable.java","OnConflict.java","PrimaryKey.java","Table.java"};
+            for (String i : list)
+            {
+                System.out.println("copying File: " + i);
+                copy_file(new File(i), new File(workdir + File.separator + out_classdir + File.separator + i));
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private static void copy_file(File sourceFile, File destFile)
+    {
+        if (!sourceFile.exists())
+        {
+            return;
+        }
+        try
+        {
+            Files.copy(sourceFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
         catch(Exception e)
         {
