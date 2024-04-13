@@ -1,4 +1,4 @@
-    public Message get(int i)
+    public __@@@TABLE@@@__ get(int i)
     {
         this.sql_limit = " limit " + i + ",1 ";
         return this.toList().get(0);
@@ -82,13 +82,13 @@
         return ret;
     }
 
-    public Message limit(int rowcount)
+    public __@@@TABLE@@@__ limit(int rowcount)
     {
         this.sql_limit = " limit " + rowcount + " ";
         return this;
     }
 
-    public Message limit(int rowcount, int offset)
+    public __@@@TABLE@@@__ limit(int rowcount, int offset)
     {
         this.sql_limit = " limit " + offset + " , " + rowcount;
         return this;

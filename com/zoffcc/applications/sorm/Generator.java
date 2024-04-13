@@ -171,8 +171,8 @@ public class Generator {
         tbl_tostring += "    {" + "\n";
         tbl_tostring += "        return ";
 
-        tbl_tolist = read_text_file(orma_global_tbl_tolist_01);
-        tbl_tolist += "                Message out = new Message();" + "\n";
+        tbl_tolist = read_text_file(orma_global_tbl_tolist_01).replace("__@@@TABLE@@@__", tablename);
+        tbl_tolist += "                "+tablename+" out = new "+tablename+"();" + "\n";
 
         tbl_insert = read_text_file(orma_global_tbl_insert_01);
         tbl_insert_sub01 = "";
@@ -274,7 +274,7 @@ public class Generator {
             out.write(tbl_insert);
 
             out.newLine();
-            out.write(tbl21);
+            out.write(tbl21.replace("__@@@TABLE@@@__", tablename));
 
             out.newLine();
             out.write(tbl_setfuncs);
