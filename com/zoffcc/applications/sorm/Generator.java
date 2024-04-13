@@ -14,17 +14,38 @@ public class Generator {
     private static final String TAG = "Generator";
     static final String Version = "0.99.0";
     static final String prefix = "_sorm_";
+    static final String tbl_f_ext = ".java";
+    static final String LOGGER_DB_PREFIX = "DB.";
+    // on Android the logger tag length is limited
+    static final int MAX_LOGGER_PRE_LEN = (20 - LOGGER_DB_PREFIX.length());
     static final String out_classdir = "com/zoffcc/applications/sorm/";
     static final String orma_global_in1 = "o1.txt";
     static final String orma_global_in2 = "o2.txt";
     static final String orma_global_t1 = "t1.txt";
+    static final String orma_global_tbl01 = "tbl01.txt";
+    static final String orma_global_tbl11 = "tbl11.txt";
+    static final String orma_global_tbl21 = "tbl21.txt";
+    static final String orma_global_tbl_tolist_01 = "tbl_tolist_01.txt";
+    static final String orma_global_tbl_tolist_02 = "tbl_tolist_02.txt";
+    static final String orma_global_tbl_insert_01 = "tbl_insert_01.txt";
+    static final String orma_global_tbl_insert_02 = "tbl_insert_02.txt";
+    static final String orma_global_tbl99 = "tbl99.txt";
     static final String orma_global_out = "OrmaDatabase.java";
+    static String tbl_deepcopy = "";
+    static String tbl_tostring = "";
+    static String tbl_tolist = "";
+    static int column_num = 0;
+    static String tbl_insert = "";
+    static String tbl_insert_sub01 = "";
+    static String tbl_insert_sub02 = "";
+    static String tbl_insert_sub03 = "";
 
     enum COLTYPE
     {
         INT(1), LONG(2), STRING(3), BOOLEAN(4), UNKNOWN(999);
         private int value;
         private String name;
+        private String javatype;
         private COLTYPE(int value)
         {
             this.value = value;
@@ -33,6 +54,11 @@ public class Generator {
             if (value == 3) { this.name = "STRING"; };
             if (value == 4) { this.name = "BOOLEAN"; };
             if (value == 999) { this.name = "UNKNOWN"; };
+            if (value == 1) { this.javatype = "int"; };
+            if (value == 2) { this.javatype = "long"; };
+            if (value == 3) { this.javatype = "String"; };
+            if (value == 4) { this.javatype = "boolean"; };
+            if (value == 999) { this.javatype = "Object"; };
         }
     }
 
@@ -97,6 +123,135 @@ public class Generator {
         }
     }
 
+    static void begin_table(final String workdir, final String tablename)
+    {
+        System.out.println("starting: " + workdir + File.separator + out_classdir + tablename + tbl_f_ext);
+        tbl_deepcopy = "    static "+tablename+" deep_copy("+tablename+" in)" + "\n";
+        tbl_deepcopy += "    {" + "\n";
+        tbl_deepcopy += "        "+tablename+" out = new "+tablename+"();" + "\n";
+
+        tbl_tostring = "    @Override" + "\n";
+        tbl_tostring += "    public String toString()" + "\n";
+        tbl_tostring += "    {" + "\n";
+        tbl_tostring += "        return ";
+
+        tbl_tolist = read_text_file(orma_global_tbl_tolist_01);
+        tbl_tolist += "                Message out = new Message();" + "\n";
+
+        tbl_insert = read_text_file(orma_global_tbl_insert_01);
+        tbl_insert_sub01 = "";
+        tbl_insert_sub02 = "";
+        tbl_insert_sub03 = "";
+        column_num = 0;
+
+        try
+        {
+            File d = new File(workdir + File.separator + out_classdir);
+            d.mkdirs();
+            final String tbl01 = read_text_file(orma_global_tbl01);
+            FileWriter fstream = new FileWriter(workdir + File.separator + out_classdir + tablename + tbl_f_ext,
+                StandardCharsets.UTF_8);
+            BufferedWriter out = new BufferedWriter(fstream);
+            out.write(tbl01);
+            out.newLine();
+            out.write("@Table");
+            out.newLine();
+            out.write("public class " + tablename);
+            out.newLine();
+            out.write("{");
+            out.newLine();
+            out.write("    private static final String TAG = \"" + LOGGER_DB_PREFIX
+                + tablename.substring(0, Math.min(tablename.length(), MAX_LOGGER_PRE_LEN)) + "\";");
+            out.newLine();
+            out.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    static void finish_table(final String workdir, final String tablename)
+    {
+        System.out.println("finishing: " + workdir + File.separator + out_classdir + tablename + tbl_f_ext);
+        try
+        {
+            File d = new File(workdir + File.separator + out_classdir);
+            d.mkdirs();
+            final String tbl99 = read_text_file(orma_global_tbl99);
+            final String tbl11 = read_text_file(orma_global_tbl11);
+            final String tbl21 = read_text_file(orma_global_tbl21);
+            tbl_tolist += read_text_file(orma_global_tbl_tolist_02);
+            tbl_insert += tbl_insert_sub01;
+            tbl_insert += "                    \")\" +" + "\n";
+            tbl_insert += "                    \"values\" +" + "\n";
+            tbl_insert += "                    \"(\" +" + "\n";
+            tbl_insert += tbl_insert_sub02;
+            tbl_insert += "                    \")\";" + "\n";
+            tbl_insert += "" + "\n";
+            tbl_insert += "            insert_pstmt = sqldb.prepareStatement(insert_pstmt_sql);" + "\n";
+            tbl_insert += "            insert_pstmt.clearParameters();" + "\n";
+            tbl_insert += "" + "\n";
+            tbl_insert += tbl_insert_sub03;
+            tbl_insert += read_text_file(orma_global_tbl_insert_02);
+
+            FileWriter fstream = new FileWriter(workdir + File.separator + out_classdir + tablename + tbl_f_ext,
+                StandardCharsets.UTF_8, true); // append!
+            BufferedWriter out = new BufferedWriter(fstream);
+            tbl_deepcopy += "\n";
+            tbl_deepcopy += "        return out;" + "\n";
+            tbl_deepcopy += "    }" + "\n";
+            tbl_deepcopy += "\n";
+            out.write(tbl_deepcopy);
+
+            tbl_tostring += ";" + "\n";
+            tbl_tostring += "    }" + "\n";
+            tbl_tostring += "" + "\n";
+            out.write(tbl_tostring);
+
+            out.newLine();
+            out.write(tbl11);
+
+            out.newLine();
+            out.write(tbl_tolist);
+
+            out.newLine();
+            out.write(tbl_insert);
+
+            out.newLine();
+            out.write(tbl21);
+
+            out.newLine();
+            out.write(tbl99);
+            out.newLine();
+            out.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    static void append_to_table(final String workdir, final String tablename, final String txt_line)
+    {
+        // System.out.println("appending to table: " + workdir + File.separator + out_classdir + tablename + tbl_f_ext);
+        try
+        {
+            File d = new File(workdir + File.separator + out_classdir);
+            d.mkdirs();
+            FileWriter fstream = new FileWriter(workdir + File.separator + out_classdir + tablename + tbl_f_ext,
+                StandardCharsets.UTF_8, true); // append!
+            BufferedWriter out = new BufferedWriter(fstream);
+            out.write(txt_line);
+            out.newLine();
+            out.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     static void finish_orma(final String workdir, final String outfilename)
     {
         System.out.println("finishing: " + workdir + File.separator + out_classdir + outfilename);
@@ -120,7 +275,7 @@ public class Generator {
 
     static void process_tablename(final String workdir, final String outfilename, final String tablename)
     {
-        System.out.println("appending table: " + workdir + File.separator + out_classdir + outfilename);
+        System.out.println("appending to orma: " + workdir + File.separator + out_classdir + outfilename);
         try
         {
             File d = new File(workdir + File.separator + out_classdir);
@@ -137,6 +292,8 @@ public class Generator {
         {
             e.printStackTrace();
         }
+
+        begin_table(workdir, tablename);
     }
 
     static void generate_table(final String workdir, final String infilename, final String outfilename)
@@ -174,6 +331,12 @@ public class Generator {
                     // System.out.println("PrimaryKey: " + line.trim());
                     process_primary_key(workdir, infilename, outfilename,
                         line.trim());
+                    append_to_table(workdir, table_name, "    @PrimaryKey(autoincrement = true, auto = true)");
+                    append_to_table(workdir, table_name, "    public long id; // uniqe id");
+                    append_to_table(workdir, table_name, "");
+                    tbl_deepcopy += "        out.id = in.id;" + "\n";
+                    tbl_tostring += "\"id=\" + id";
+                    tbl_tolist += "                out.id = rs.getLong(\"id\");" + "\n";
                 }
                 else if (line.trim().contains("@Column("))
                 {
@@ -184,13 +347,16 @@ public class Generator {
                     }
                     // System.out.println("Column: " + line.trim());
                     process_column(workdir, infilename, outfilename,
-                        line.trim());
+                        line.trim(), table_name);
                 }
 				// System.out.println(line);
 				line = reader.readLine();
 			}
 
 			reader.close();
+
+            finish_table(workdir, table_name);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -297,11 +463,28 @@ public class Generator {
         System.out.println("P: " + p4 + " type: " + get_type(p2).name);
     }
 
-    static void process_column(final String workdir, final String infilename, final String outfilename, final String c)
+    static void process_column(final String workdir, final String infilename, final String outfilename, final String c, final String table_name)
     {
         final String c2 = remove_public(c);
         final String c3 = remove_type(c2);
-        final String c4 = get_name(c3);
-        System.out.println("C: " + c4 + " type: " + get_type(c2).name);
+        final String column_name = get_name(c3);
+        final COLTYPE c5 = get_type(c2);
+        System.out.println("C: " + column_name + " type: " + c5.name);
+
+        append_to_table(workdir, table_name, "    @Column(indexed = true, helpers = Column.Helpers.ALL)");
+        append_to_table(workdir, table_name, "    public " + c5.javatype + " " + column_name + ";");
+        append_to_table(workdir, table_name, "");
+        column_num++;
+        final String javatype_firstupper = c5.javatype.substring(0,1).toUpperCase() + c5.javatype.substring(1);
+        tbl_deepcopy += "        out."+column_name+" = in."+column_name+";" + "\n";
+        tbl_tostring += " + \", "+column_name+"=\" + "+column_name+"";
+        tbl_tolist += "                out."+column_name+" = rs.get"+javatype_firstupper+"(\""+column_name+"\");" + "\n";
+        // -----------
+        String comma = "";
+        if (column_num > 1) {comma = ",";}
+        tbl_insert_sub01 += "                    + \""+comma+""+column_name+"\"" + "\n";
+        tbl_insert_sub02 += "                    + \""+comma+"?"+column_num+"\"" + "\n";
+        // -----------
+        tbl_insert_sub03 += "            insert_pstmt.set"+javatype_firstupper+"("+column_num+", this."+column_name+");" + "\n";
     }
 }
