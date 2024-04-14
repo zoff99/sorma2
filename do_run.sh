@@ -18,7 +18,7 @@ cd test/
 -classpath ".:sqlite-jdbc-3.45.2.0.jar:slf4j-api-1.7.2.jar:sorma_generated.jar" \
 org/example/TestSorma.java
 
-rm main.db
+rm -f main.db
 
 /usr/lib/jvm/temurin-8-jdk-amd64/bin/java \
 -classpath ".:sqlite-jdbc-3.45.2.0.jar:slf4j-api-1.7.2.jar:sorma_generated.jar" \
