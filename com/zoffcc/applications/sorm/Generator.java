@@ -739,5 +739,18 @@ public class Generator {
             tbl_equalfuncs  += "" + "\n";
 
         }
+
+        if (ctype == COLTYPE.STRING)
+        {
+            // Like
+            tbl_equalfuncs  += "    public "+table_name+" "+column_name+"Like("+ctype.javatype+" "+column_name+")" + "\n";
+            tbl_equalfuncs  += "    {" + "\n";
+            tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+" like ?\" + (BINDVAR_OFFSET_WHERE + bind_where_count) + \" ESCAPE '\\\\' \";" + "\n";
+            tbl_equalfuncs  += "        bind_where_vars.add(new OrmaBindvar(BINDVAR_TYPE_"+javatype_firstupper+", "+column_name+"));" + "\n";
+            tbl_equalfuncs  += "        bind_where_count++;" + "\n";
+            tbl_equalfuncs  += "        return this;" + "\n";
+            tbl_equalfuncs  += "    }" + "\n";
+            tbl_equalfuncs  += "" + "\n";
+        }
     }
 }
