@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 public class Generator {
     private static final String TAG = "Generator";
-    static final String Version = "0.99.0";
+    static final String Version = "0.99.1";
     static final String prefix = "_sorm_";
     static final String tbl_f_ext = ".java";
     static final String tbl_s_ext = ".sql";
@@ -716,10 +716,30 @@ public class Generator {
             tbl_equalfuncs  += "    }" + "\n";
             tbl_equalfuncs  += "" + "\n";
 
+            // Le
+            tbl_equalfuncs  += "    public "+table_name+" "+column_name+"Le("+ctype.javatype+" "+column_name+")" + "\n";
+            tbl_equalfuncs  += "    {" + "\n";
+            tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+"<=?\" + (BINDVAR_OFFSET_WHERE + bind_where_count) + \" \";" + "\n";
+            tbl_equalfuncs  += "        bind_where_vars.add(new OrmaBindvar(BINDVAR_TYPE_"+javatype_firstupper+", "+column_name+"));" + "\n";
+            tbl_equalfuncs  += "        bind_where_count++;" + "\n";
+            tbl_equalfuncs  += "        return this;" + "\n";
+            tbl_equalfuncs  += "    }" + "\n";
+            tbl_equalfuncs  += "" + "\n";
+
             // Gt
             tbl_equalfuncs  += "    public "+table_name+" "+column_name+"Gt("+ctype.javatype+" "+column_name+")" + "\n";
             tbl_equalfuncs  += "    {" + "\n";
             tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+">?\" + (BINDVAR_OFFSET_WHERE + bind_where_count) + \" \";" + "\n";
+            tbl_equalfuncs  += "        bind_where_vars.add(new OrmaBindvar(BINDVAR_TYPE_"+javatype_firstupper+", "+column_name+"));" + "\n";
+            tbl_equalfuncs  += "        bind_where_count++;" + "\n";
+            tbl_equalfuncs  += "        return this;" + "\n";
+            tbl_equalfuncs  += "    }" + "\n";
+            tbl_equalfuncs  += "" + "\n";
+
+            // Ge
+            tbl_equalfuncs  += "    public "+table_name+" "+column_name+"Ge("+ctype.javatype+" "+column_name+")" + "\n";
+            tbl_equalfuncs  += "    {" + "\n";
+            tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+">=?\" + (BINDVAR_OFFSET_WHERE + bind_where_count) + \" \";" + "\n";
             tbl_equalfuncs  += "        bind_where_vars.add(new OrmaBindvar(BINDVAR_TYPE_"+javatype_firstupper+", "+column_name+"));" + "\n";
             tbl_equalfuncs  += "        bind_where_count++;" + "\n";
             tbl_equalfuncs  += "        return this;" + "\n";
@@ -745,7 +765,17 @@ public class Generator {
             // Like
             tbl_equalfuncs  += "    public "+table_name+" "+column_name+"Like("+ctype.javatype+" "+column_name+")" + "\n";
             tbl_equalfuncs  += "    {" + "\n";
-            tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+" like ?\" + (BINDVAR_OFFSET_WHERE + bind_where_count) + \" ESCAPE '\\\\' \";" + "\n";
+            tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+" LIKE ?\" + (BINDVAR_OFFSET_WHERE + bind_where_count) + \" ESCAPE '\\\\' \";" + "\n";
+            tbl_equalfuncs  += "        bind_where_vars.add(new OrmaBindvar(BINDVAR_TYPE_"+javatype_firstupper+", "+column_name+"));" + "\n";
+            tbl_equalfuncs  += "        bind_where_count++;" + "\n";
+            tbl_equalfuncs  += "        return this;" + "\n";
+            tbl_equalfuncs  += "    }" + "\n";
+            tbl_equalfuncs  += "" + "\n";
+
+            // NotLike
+            tbl_equalfuncs  += "    public "+table_name+" "+column_name+"NotLike("+ctype.javatype+" "+column_name+")" + "\n";
+            tbl_equalfuncs  += "    {" + "\n";
+            tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+" NOT LIKE ?\" + (BINDVAR_OFFSET_WHERE + bind_where_count) + \" ESCAPE '\\\\' \";" + "\n";
             tbl_equalfuncs  += "        bind_where_vars.add(new OrmaBindvar(BINDVAR_TYPE_"+javatype_firstupper+", "+column_name+"));" + "\n";
             tbl_equalfuncs  += "        bind_where_count++;" + "\n";
             tbl_equalfuncs  += "        return this;" + "\n";
