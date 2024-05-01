@@ -1,6 +1,8 @@
 # Sorma<sup>2</sup> - Simple ORM(Android)<sup>2</sup>
 
 It is based on the wonderful https://github.com/maskarade/Android-Orma by [FUJI Goro](https://github.com/gfx)
+<br>
+<br>
 This is a rewrite in pure java, to generate most stuff you need and then add it to your project
 either as a ```.jar file``` or as ```java source```.<br>
 You still need to add ```sqlite-jdbc-3.45.2.0.jar``` and ```slf4j-api-1.7.2.jar``` to your project to use it.<br>
