@@ -1,4 +1,4 @@
-# Sorma2 - Simple ORM(Android)2
+# Sorma<sup>2</sup> - Simple ORM(Android)<sup>2</sup>
 
 It is based on the wonderful https://github.com/maskarade/Android-Orma by [FUJI Goro](https://github.com/gfx)
 This is a rewrite in pure java, to generate most stuff you need and then add it to your project
