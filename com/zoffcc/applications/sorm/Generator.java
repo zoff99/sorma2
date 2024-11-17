@@ -757,8 +757,23 @@ public class Generator {
             tbl_equalfuncs  += "        return this;" + "\n";
             tbl_equalfuncs  += "    }" + "\n";
             tbl_equalfuncs  += "" + "\n";
-
         }
+
+        // Null
+        tbl_equalfuncs  += "    public "+table_name+" "+column_name+"IsNull()" + "\n";
+        tbl_equalfuncs  += "    {" + "\n";
+        tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+" IS NULL \";" + "\n";
+        tbl_equalfuncs  += "        return this;" + "\n";
+        tbl_equalfuncs  += "    }" + "\n";
+        tbl_equalfuncs  += "" + "\n";
+
+        // NotNull
+        tbl_equalfuncs  += "    public "+table_name+" "+column_name+"IsNotNull()" + "\n";
+        tbl_equalfuncs  += "    {" + "\n";
+        tbl_equalfuncs  += "        this.sql_where = this.sql_where + \" and "+column_name+" IS NOT NULL \";" + "\n";
+        tbl_equalfuncs  += "        return this;" + "\n";
+        tbl_equalfuncs  += "    }" + "\n";
+        tbl_equalfuncs  += "" + "\n";
 
         if (ctype == COLTYPE.STRING)
         {
