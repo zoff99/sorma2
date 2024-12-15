@@ -5,7 +5,7 @@ java \
 com/zoffcc/applications/sorm/Generator "gen"
 
 cd gen/
-/usr/lib/jvm/temurin-8-jdk-amd64/bin/javac \
+javac \
 -cp "sqlite-jdbc-3.47.1.0.jar" \
 com/zoffcc/applications/sorm/*.java && \
 jar cf sorma_generated.jar com/zoffcc/applications/sorm/*.class && \
@@ -14,13 +14,13 @@ cd ../
 
 # use generated custom jar
 cd test/
-/usr/lib/jvm/temurin-8-jdk-amd64/bin/javac \
+javac \
 -classpath ".:sqlite-jdbc-3.47.1.0.jar:sorma_generated.jar" \
 org/example/TestSorma.java
 
 rm -f main.db
 
-/usr/lib/jvm/temurin-8-jdk-amd64/bin/java \
+java \
 -classpath ".:sqlite-jdbc-3.47.1.0.jar:sorma_generated.jar" \
 org/example/TestSorma
 
