@@ -44,6 +44,11 @@ sed -i -e 's#sqlite-jdbc-[^:]*\.jar#'"$file"'#' "$f1"
 sed -i -e 's#sqlite-jdbc-[^:]*\.jar#'"$file"'#' "$f2"
 sed -i -e 's#sqlite-jdbc-[^:]*\.jar#'"$file"'#' "$f3"
 
+if [ "$1""x" == "nocommitx" ]; then
+    echo "no commit"
+    exit 0
+fi
+
 git add ./test/"$file"
 git add "$f1" "$f2" "$f3"
 
