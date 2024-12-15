@@ -10,6 +10,6 @@ com/zoffcc/applications/sorm/Nullable.java \
 com/zoffcc/applications/sorm/OnConflict.java \
 com/zoffcc/applications/sorm/PrimaryKey.java \
 com/zoffcc/applications/sorm/Table.java \
-com/zoffcc/applications/sorm/Generator.java
+com/zoffcc/applications/sorm/Generator.java || exit 1
 
-jar cf sorma2.jar com/zoffcc/applications/sorm/*.class
+jar cf sorma2.jar com/zoffcc/applications/sorm/*.class || exit 1

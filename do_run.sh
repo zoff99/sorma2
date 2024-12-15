@@ -2,7 +2,7 @@
 
 java \
 -classpath ".:sqlite-jdbc-3.47.1.0.jar:sorma2.jar" \
-com/zoffcc/applications/sorm/Generator "gen"
+com/zoffcc/applications/sorm/Generator "gen" || exit 1
 
 cd gen/
 javac \
@@ -10,17 +10,17 @@ javac \
 com/zoffcc/applications/sorm/*.java && \
 jar cf sorma_generated.jar com/zoffcc/applications/sorm/*.class && \
 cp sorma_generated.jar ../test/ && \
-cd ../
+cd ../ || exit 1
 
 # use generated custom jar
 cd test/
 javac \
 -classpath ".:sqlite-jdbc-3.47.1.0.jar:sorma_generated.jar" \
-org/example/TestSorma.java
+org/example/TestSorma.java || exit 1
 
 rm -f main.db
 
 java \
 -classpath ".:sqlite-jdbc-3.47.1.0.jar:sorma_generated.jar" \
-org/example/TestSorma
+org/example/TestSorma || exit 1
 
