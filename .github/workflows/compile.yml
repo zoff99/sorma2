@@ -33,9 +33,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: install deps
-        run:  brew install gdb
-
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
