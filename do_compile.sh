@@ -1,7 +1,7 @@
 #! /bin/bash
 
 javac \
--cp "sqlite-jdbc-3.47.2.0.jar" \
+-cp "sqlite-jdbc-3.48.0.0.jar" \
 com/zoffcc/applications/sorm/OrmaDatabase.java \
 com/zoffcc/applications/sorm/Column.java \
 com/zoffcc/applications/sorm/Index.java \
