@@ -62,6 +62,50 @@ public class TestSorma {
         }
     }
 
+    static class UpdateM implements Runnable {
+        OrmaDatabase orma;
+        public UpdateM(OrmaDatabase orma)
+        {
+            this.orma = orma;
+        }
+
+        public void run()
+        {
+            for (int x=0;x<12;x++)
+            {
+                try {
+                    orma.updateMessage().tox_friendpubkeyEq("AAAAAAA").text("22222222222").execute();
+                    Thread.sleep(1);
+                }
+                catch(Exception e)
+                {
+                }
+            }
+        }
+    }
+
+    static class DeleteM implements Runnable {
+        OrmaDatabase orma;
+        public DeleteM(OrmaDatabase orma)
+        {
+            this.orma = orma;
+        }
+
+        public void run()
+        {
+            for (int x=0;x<8;x++)
+            {
+                try {
+                    orma.deleteFromMessage().execute();
+                    Thread.sleep(10);
+                }
+                catch(Exception e)
+                {
+                }
+            }
+        }
+    }
+
     static class ReadA implements Runnable {
 
         OrmaDatabase orma;
@@ -174,6 +218,12 @@ public class TestSorma {
 
         Thread wm1 = new Thread(new WriteM(orma));
         wm1.start();
+
+        Thread um1 = new Thread(new UpdateM(orma));
+        um1.start();
+
+        Thread dl1 = new Thread(new DeleteM(orma));
+        dl1.start();
 
         Thread t4 = new Thread(new WriteB());
         t4.start();
