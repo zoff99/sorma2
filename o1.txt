@@ -496,7 +496,10 @@ public class OrmaDatabase
             {
                 try
                 {
-                    // Log.i(TAG, "SQL:" + query);
+                    if (ORMA_TRACE)
+                    {
+                        Log.i(TAG, "sql=" + query);
+                    }
                     statement.executeUpdate(query);
                 }
                 catch (SQLException e)
@@ -550,7 +553,10 @@ public class OrmaDatabase
                 String[] queries = sql_multi.split(";");
                 for (String query : queries)
                 {
-                    // Log.i(TAG, "SQL:" + query);
+                    if (ORMA_TRACE)
+                    {
+                        Log.i(TAG, "sql=" + query);
+                    }
                     ResultSet rs = statement.executeQuery(query);
                     if (rs.next())
                     {
