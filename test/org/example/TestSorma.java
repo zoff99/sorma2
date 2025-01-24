@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 public class TestSorma {
     private static final String TAG = "TestSorma";
     static final String Version = "0.99.0";
+    static final boolean wal_mode = true;
 
     static class WriteB implements Runnable {
         public void run()
@@ -18,8 +19,8 @@ public class TestSorma {
             for (int x=0;x<8;x++)
             {
                 try {
-                    OrmaDatabase.orma_global_writeLock.lock();
-                    System.out.println(getCurrentTimeStamp() + "write lock: locked =================");
+                    // OrmaDatabase.orma_global_writeLock.lock();
+                    // System.out.println(getCurrentTimeStamp() + "write lock: locked =================");
                     chkp();
                     Thread.sleep(100);
                 }
@@ -28,8 +29,8 @@ public class TestSorma {
                 }
                 finally
                 {
-                    System.out.println(getCurrentTimeStamp() + "write lock: unlocked  ==============");
-                    OrmaDatabase.orma_global_writeLock.unlock();
+                    // System.out.println(getCurrentTimeStamp() + "write lock: unlocked  ==============");
+                    // OrmaDatabase.orma_global_writeLock.unlock();
                 }
             }
         }
@@ -115,7 +116,7 @@ public class TestSorma {
     public static void main(String[] args) {
         System.out.println("TestSorma v" + Version);
 
-        OrmaDatabase orma = new OrmaDatabase("./main.db", "", true);
+        OrmaDatabase orma = new OrmaDatabase("./main.db", "", wal_mode);
         init();
         System.out.println(getCurrentTimeStamp() + "orma: " + orma);
 
