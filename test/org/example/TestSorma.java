@@ -18,7 +18,8 @@ public class TestSorma {
             try {
                 OrmaDatabase.orma_global_writeLock.lock();
                 System.out.println(getCurrentTimeStamp() + "write lock: locked =================");
-                Thread.sleep(3 * 1000);
+                chkp();
+                Thread.sleep(1 * 1000);
             }
             catch(Exception e)
             {
@@ -37,7 +38,9 @@ public class TestSorma {
 
     public static void chkp()
     {
-        System.out.println(getCurrentTimeStamp() + "checkpoint: " + OrmaDatabase.run_query_for_single_result("PRAGMA busy_timeout = 1000; PRAGMA wal_checkpoint(TRUNCATE);"));
+        System.out.println(
+            getCurrentTimeStamp() +
+            "checkpoint: " + OrmaDatabase.run_query_for_single_result("PRAGMA busy_timeout = 1000; PRAGMA wal_checkpoint(TRUNCATE);"));
     }
 
     public static void main(String[] args) {
@@ -93,6 +96,10 @@ public class TestSorma {
 
         Thread t3 = new Thread(new WriteB());
         t3.start();
+        Thread t4 = new Thread(new WriteB());
+        t4.start();
+        Thread t5 = new Thread(new WriteB());
+        t5.start();
 
         System.out.println(getCurrentTimeStamp() + "trying to select ...");
 
