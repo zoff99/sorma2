@@ -10,12 +10,20 @@ public class TestSorma {
     private static final String TAG = "TestSorma";
     static final String Version = "0.99.0";
 
+    public static void chkp()
+    {
+        System.out.println("checkpoint: " + OrmaDatabase.run_query_for_single_result("PRAGMA busy_timeout = 1000; PRAGMA wal_checkpoint(TRUNCATE);"));
+    }
+
     public static void main(String[] args) {
         System.out.println("TestSorma v" + Version);
 
-        init("./", "main.db");
-        OrmaDatabase orma = new OrmaDatabase();
+        OrmaDatabase orma = new OrmaDatabase("./main.db", "", true);
+        init();
         System.out.println("orma: " + orma);
+
+        chkp();
+
         OrmaDatabase.run_multi_sql("CREATE TABLE IF NOT EXISTS Message ("+
         "message_id	INTEGER NOT NULL,"+
         "tox_friendpubkey	TEXT NOT NULL,"+
@@ -55,6 +63,8 @@ public class TestSorma {
         long rowid = orma.insertIntoMessage(m);
         System.out.println("rowid1: " + rowid);
 
+        chkp();
+
         int c = orma.selectFromMessage().count();
         System.out.println("count: " + c);
 
@@ -71,9 +81,21 @@ public class TestSorma {
 
         orma.deleteFromMessage().tox_friendpubkeyEq("BBBBBBB").execute();
 
+        chkp();
+
         c = orma.selectFromMessage().count();
         System.out.println("count: " + c);
-        
+
+        try
+        {
+            Thread.sleep(1 * 1000);
+        }
+        catch(Exception e)
+        {
+        }
+
+        chkp();
+
         shutdown();
     }
 }
