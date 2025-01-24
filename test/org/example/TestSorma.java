@@ -14,20 +14,89 @@ public class TestSorma {
 
     static class WriteB implements Runnable {
         public void run()
-        { 
-            try {
-                OrmaDatabase.orma_global_writeLock.lock();
-                System.out.println(getCurrentTimeStamp() + "write lock: locked =================");
-                chkp();
-                Thread.sleep(1 * 1000);
+        {
+            for (int x=0;x<8;x++)
+            {
+                try {
+                    OrmaDatabase.orma_global_writeLock.lock();
+                    System.out.println(getCurrentTimeStamp() + "write lock: locked =================");
+                    chkp();
+                    Thread.sleep(100);
+                }
+                catch(Exception e)
+                {
+                }
+                finally
+                {
+                    System.out.println(getCurrentTimeStamp() + "write lock: unlocked  ==============");
+                    OrmaDatabase.orma_global_writeLock.unlock();
+                }
+            }
+        }
+    }
+
+    static class WriteM implements Runnable {
+        OrmaDatabase orma;
+        public WriteM(OrmaDatabase orma)
+        {
+            this.orma = orma;
+        }
+
+        public void run()
+        {
+            for (int x=0;x<8;x++)
+            {
+                try {
+                    Message m = new Message();
+                    m.tox_friendpubkey = "BBBBBBB" + x;
+                    m.text = "________TEXT22________" + x;
+                    long rowid = orma.insertIntoMessage(m);
+                    System.out.println(getCurrentTimeStamp() + "rowid2: " + rowid);
+                    Thread.sleep(1);
+                }
+                catch(Exception e)
+                {
+                }
+            }
+        }
+    }
+
+    static class ReadA implements Runnable {
+
+        OrmaDatabase orma;
+        public ReadA(OrmaDatabase orma)
+        {
+            this.orma = orma;
+        }
+
+        public void run()
+        {
+            for (int i=0;i<50;i++)
+            try
+            {
+                Thread.sleep(1);
+                int c = this.orma.selectFromMessage().count();
+                System.out.println(getCurrentTimeStamp() + "count: " + c);
             }
             catch(Exception e)
             {
             }
-            finally
+        }
+    }
+
+
+    static class CK1 implements Runnable {
+
+        public void run()
+        {
+            for (int i=0;i<50;i++)
+            try
             {
-                System.out.println(getCurrentTimeStamp() + "write lock: unlocked  ==============");
-                OrmaDatabase.orma_global_writeLock.unlock();
+                Thread.sleep(1);
+                chkp();
+            }
+            catch(Exception e)
+            {
             }
         }
     }
@@ -93,13 +162,20 @@ public class TestSorma {
 
         chkp();
 
+        Thread ck1 = new Thread(new CK1());
+        ck1.start();
+
+        Thread r1 = new Thread(new ReadA(orma));
+        r1.start();
 
         Thread t3 = new Thread(new WriteB());
         t3.start();
+
+        Thread wm1 = new Thread(new WriteM(orma));
+        wm1.start();
+
         Thread t4 = new Thread(new WriteB());
         t4.start();
-        Thread t5 = new Thread(new WriteB());
-        t5.start();
 
         System.out.println(getCurrentTimeStamp() + "trying to select ...");
 
