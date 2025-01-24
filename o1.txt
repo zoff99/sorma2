@@ -12,6 +12,8 @@ import java.sql.*;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.zoffcc.applications.sorm.Log;
 
@@ -25,6 +27,9 @@ public class OrmaDatabase
     public static Connection sqldb = null;
     static int current_db_version = 0;
     static Semaphore orma_semaphore_lastrowid_on_insert = new Semaphore(1);
+    static ReentrantReadWriteLock orma_global_readwritelock = new ReentrantReadWriteLock(true);
+    static final Lock orma_global_readLock = orma_global_readwritelock.readLock();
+    public static final Lock orma_global_writeLock = orma_global_readwritelock.writeLock();
 
     private static String db_file_path = null;
     private static String secrect_key = null;
@@ -130,6 +135,7 @@ public class OrmaDatabase
 
     public static long get_last_rowid_pstmt()
     {
+        orma_global_readLock.lock();
         try
         {
             long ret = -1;
@@ -142,10 +148,12 @@ public class OrmaDatabase
             rs.close();
             lastrowid_pstmt.close();
             // Log.i(TAG, "get_last_rowid_pstmt:ret=" + ret);
+            orma_global_readLock.unlock();
             return ret;
         }
         catch (Exception e)
         {
+            orma_global_readLock.unlock();
             e.printStackTrace();
             Log.i(TAG, "get_last_rowid_pstmt:EE1:" + e.getMessage());
             return -1;

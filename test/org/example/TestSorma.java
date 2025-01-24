@@ -5,14 +5,39 @@ import com.zoffcc.applications.sorm.Message;
 import static com.zoffcc.applications.sorm.OrmaDatabase.*;
 import static com.zoffcc.applications.sorm.OrmaDatabase.init;
 import static com.zoffcc.applications.sorm.OrmaDatabase.shutdown;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class TestSorma {
     private static final String TAG = "TestSorma";
     static final String Version = "0.99.0";
 
+    static class WriteB implements Runnable {
+        public void run()
+        { 
+            try {
+                OrmaDatabase.orma_global_writeLock.lock();
+                System.out.println(getCurrentTimeStamp() + "write lock: locked =================");
+                Thread.sleep(3 * 1000);
+            }
+            catch(Exception e)
+            {
+            }
+            finally
+            {
+                System.out.println(getCurrentTimeStamp() + "write lock: unlocked  ==============");
+                OrmaDatabase.orma_global_writeLock.unlock();
+            }
+        }
+    }
+
+    public static String getCurrentTimeStamp() {
+        return (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date())) + ": ";
+    }
+
     public static void chkp()
     {
-        System.out.println("checkpoint: " + OrmaDatabase.run_query_for_single_result("PRAGMA busy_timeout = 1000; PRAGMA wal_checkpoint(TRUNCATE);"));
+        System.out.println(getCurrentTimeStamp() + "checkpoint: " + OrmaDatabase.run_query_for_single_result("PRAGMA busy_timeout = 1000; PRAGMA wal_checkpoint(TRUNCATE);"));
     }
 
     public static void main(String[] args) {
@@ -20,7 +45,7 @@ public class TestSorma {
 
         OrmaDatabase orma = new OrmaDatabase("./main.db", "", true);
         init();
-        System.out.println("orma: " + orma);
+        System.out.println(getCurrentTimeStamp() + "orma: " + orma);
 
         chkp();
 
@@ -61,21 +86,27 @@ public class TestSorma {
         m.tox_friendpubkey = "AAAAAAA";
         m.text = "________TEXT11________";
         long rowid = orma.insertIntoMessage(m);
-        System.out.println("rowid1: " + rowid);
+        System.out.println(getCurrentTimeStamp() + "rowid1: " + rowid);
 
         chkp();
 
+
+        Thread t3 = new Thread(new WriteB());
+        t3.start();
+
+        System.out.println(getCurrentTimeStamp() + "trying to select ...");
+
         int c = orma.selectFromMessage().count();
-        System.out.println("count: " + c);
+        System.out.println(getCurrentTimeStamp() + "count: " + c);
 
         m = new Message();
         m.tox_friendpubkey = "BBBBBBB";
         m.text = "________TEXT22________";
         rowid = orma.insertIntoMessage(m);
-        System.out.println("rowid2: " + rowid);
+        System.out.println(getCurrentTimeStamp() + "rowid2: " + rowid);
 
         c = orma.selectFromMessage().count();
-        System.out.println("count: " + c);
+        System.out.println(getCurrentTimeStamp() + "count: " + c);
 
         orma.updateMessage().tox_friendpubkeyEq("AAAAAAA").text("22222222222").execute();
 
@@ -84,7 +115,7 @@ public class TestSorma {
         chkp();
 
         c = orma.selectFromMessage().count();
-        System.out.println("count: " + c);
+        System.out.println(getCurrentTimeStamp() + "count: " + c);
 
         try
         {
