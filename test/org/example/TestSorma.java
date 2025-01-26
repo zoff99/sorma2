@@ -13,24 +13,34 @@ public class TestSorma {
     static final String Version = "0.99.0";
     static final boolean wal_mode = true;
 
-    static class WriteB implements Runnable {
+    static final int iterations_in_threads = 50;
+    static final int reader_threads = 1000;
+    static boolean running = true;
+
+    static class CK1 implements Runnable {
         public void run()
         {
-            for (int x=0;x<8;x++)
+            for (int x=0;x<iterations_in_threads;x++)
             {
-                try {
-                    // OrmaDatabase.orma_global_writeLock.lock();
-                    // System.out.println(getCurrentTimeStamp() + "write lock: locked =================");
+                try
+                {
                     chkp();
-                    Thread.sleep(100);
                 }
                 catch(Exception e)
                 {
                 }
-                finally
+
+                try
                 {
-                    // System.out.println(getCurrentTimeStamp() + "write lock: unlocked  ==============");
-                    // OrmaDatabase.orma_global_writeLock.unlock();
+                    Thread.sleep(14);
+                }
+                catch(Exception e)
+                {
+                }
+
+                if (!running)
+                {
+                    return;
                 }
             }
         }
@@ -45,7 +55,7 @@ public class TestSorma {
 
         public void run()
         {
-            for (int x=0;x<8;x++)
+            for (int x=0;x<iterations_in_threads;x++)
             {
                 try {
                     Message m = new Message();
@@ -53,7 +63,7 @@ public class TestSorma {
                     m.text = "________TEXT22________" + x;
                     long rowid = orma.insertIntoMessage(m);
                     System.out.println(getCurrentTimeStamp() + "rowid2: " + rowid);
-                    Thread.sleep(1);
+                    Thread.sleep(5);
                 }
                 catch(Exception e)
                 {
@@ -71,11 +81,11 @@ public class TestSorma {
 
         public void run()
         {
-            for (int x=0;x<12;x++)
+            for (int x=0;x<iterations_in_threads;x++)
             {
                 try {
                     orma.updateMessage().tox_friendpubkeyEq("AAAAAAA").text("22222222222").execute();
-                    Thread.sleep(1);
+                    Thread.sleep(3);
                 }
                 catch(Exception e)
                 {
@@ -93,11 +103,11 @@ public class TestSorma {
 
         public void run()
         {
-            for (int x=0;x<8;x++)
+            for (int x=0;x<iterations_in_threads;x++)
             {
                 try {
                     orma.deleteFromMessage().execute();
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                 }
                 catch(Exception e)
                 {
@@ -106,39 +116,22 @@ public class TestSorma {
         }
     }
 
-    static class ReadA implements Runnable {
+    static class ReadM implements Runnable {
 
         OrmaDatabase orma;
-        public ReadA(OrmaDatabase orma)
+        public ReadM(OrmaDatabase orma)
         {
             this.orma = orma;
         }
 
         public void run()
         {
-            for (int i=0;i<50;i++)
+            for (int i=0;i<iterations_in_threads;i++)
             try
             {
-                Thread.sleep(1);
+                Thread.sleep(2);
                 int c = this.orma.selectFromMessage().count();
-                System.out.println(getCurrentTimeStamp() + "count: " + c);
-            }
-            catch(Exception e)
-            {
-            }
-        }
-    }
-
-
-    static class CK1 implements Runnable {
-
-        public void run()
-        {
-            for (int i=0;i<50;i++)
-            try
-            {
-                Thread.sleep(1);
-                chkp();
+                // System.out.println(getCurrentTimeStamp() + "count: " + c);
             }
             catch(Exception e)
             {
@@ -207,26 +200,34 @@ public class TestSorma {
 
         chkp();
 
-        Thread ck1 = new Thread(new CK1());
-        ck1.start();
+        Thread tchkp = new Thread(new CK1());
+        tchkp.start();
 
-        Thread r1 = new Thread(new ReadA(orma));
-        r1.start();
+        Thread t1 = new Thread(new ReadM(orma));
+        t1.start();
 
-        Thread t3 = new Thread(new WriteB());
+        Thread t2 = new Thread(new WriteM(orma));
+        t2.start();
+
+        Thread t3 = new Thread(new UpdateM(orma));
         t3.start();
 
-        Thread wm1 = new Thread(new WriteM(orma));
-        wm1.start();
-
-        Thread um1 = new Thread(new UpdateM(orma));
-        um1.start();
-
-        Thread dl1 = new Thread(new DeleteM(orma));
-        dl1.start();
-
-        Thread t4 = new Thread(new WriteB());
+        Thread t4 = new Thread(new DeleteM(orma));
         t4.start();
+
+        try
+        {
+            Thread.sleep(200);
+        }
+        catch(Exception e)
+        {
+        }
+
+        Thread[] tread = new Thread[reader_threads];
+        for (int i=0;i<reader_threads;i++) {
+            tread[i] = new Thread(new ReadM(orma));
+            tread[i].start();
+        }
 
         System.out.println(getCurrentTimeStamp() + "trying to select ...");
 
@@ -253,13 +254,44 @@ public class TestSorma {
 
         try
         {
-            Thread.sleep(1 * 1000);
+            Thread.sleep(2 * 1000);
         }
         catch(Exception e)
         {
         }
 
         chkp();
+
+        running = false;
+        tchkp.interrupt();
+
+        System.out.println(getCurrentTimeStamp() + "stop threads");
+
+        for (int i=0;i<reader_threads;i++) {
+            try
+            {
+                tread[i].interrupt();
+                tread[i].join();
+            }
+            catch(Exception e)
+            {
+            }
+        }
+
+        try
+        {
+            t1.join();
+            t2.join();
+            t3.join();
+            t4.join();
+            tchkp.join();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        System.out.println(getCurrentTimeStamp() + "stop threads done");
 
         shutdown();
     }
