@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 
 public class TestSorma {
     private static final String TAG = "TestSorma";
-    static final String Version = "0.99.0";
+    static final String Version = "0.99.1";
     static final boolean wal_mode = true;
 
     static final int iterations_in_threads = 50;
@@ -153,44 +153,53 @@ public class TestSorma {
     public static void main(String[] args) {
         System.out.println("TestSorma v" + Version);
 
+        set_schema_upgrade_callback(new schema_upgrade_callback() {
+            @Override
+            public void upgrade(int old_version, int new_version) {
+                System.out.println(getCurrentTimeStamp() + "trying to upgrade schema from " + old_version + " to " + new_version);
+                if (new_version == 2) {
+
+                    OrmaDatabase.run_multi_sql("CREATE TABLE IF NOT EXISTS Message ("+
+                                                "message_id	INTEGER NOT NULL,"+
+                                                "tox_friendpubkey	TEXT NOT NULL,"+
+                                                "direction	INTEGER NOT NULL,"+
+                                                "TOX_MESSAGE_TYPE	INTEGER NOT NULL,"+
+                                                "TRIFA_MESSAGE_TYPE	INTEGER NOT NULL DEFAULT 0,"+
+                                                "state	INTEGER NOT NULL DEFAULT 1,"+
+                                                "ft_accepted	BOOLEAN NOT NULL DEFAULT false,"+
+                                                "ft_outgoing_started	BOOLEAN NOT NULL DEFAULT false,"+
+                                                "filedb_id	INTEGER NOT NULL DEFAULT -1,"+
+                                                "filetransfer_id	INTEGER NOT NULL DEFAULT -1,"+
+                                                "sent_timestamp	INTEGER DEFAULT 0,"+
+                                                "sent_timestamp_ms	INTEGER DEFAULT 0,"+
+                                                "rcvd_timestamp	INTEGER DEFAULT 0,"+
+                                                "rcvd_timestamp_ms	INTEGER DEFAULT 0,"+
+                                                "filetransfer_kind	INTEGER DEFAULT 0,"+
+                                                "read	BOOLEAN NOT NULL,"+
+                                                "send_retries	INTEGER NOT NULL DEFAULT 0,"+
+                                                "is_new	BOOLEAN NOT NULL,"+
+                                                "ft_outgoing_queued BOOLEAN NOT NULL,"+
+                                                "msg_at_relay BOOLEAN NOT NULL,"+
+                                                "sent_push BOOLEAN NOT NULL,"+
+                                                "text	TEXT,"+
+                                                "filename_fullpath	TEXT,"+
+                                                "msg_idv3_hash	TEXT,"+
+                                                "msg_id_hash	TEXT,"+
+                                                "raw_msgv2_bytes	TEXT,"+
+                                                "msg_version	INTEGER NOT NULL DEFAULT 0,"+
+                                                "resend_count	INTEGER NOT NULL DEFAULT 2,"+
+                                                "id	INTEGER,"+
+                                                "PRIMARY KEY(\"id\" AUTOINCREMENT)"+
+                                                ");");
+                }
+            }
+        });
+
         OrmaDatabase orma = new OrmaDatabase("./main.db", "", wal_mode);
-        init();
+        init(2);
         System.out.println(getCurrentTimeStamp() + "orma: " + orma);
 
         chkp();
-
-        OrmaDatabase.run_multi_sql("CREATE TABLE IF NOT EXISTS Message ("+
-        "message_id	INTEGER NOT NULL,"+
-        "tox_friendpubkey	TEXT NOT NULL,"+
-        "direction	INTEGER NOT NULL,"+
-        "TOX_MESSAGE_TYPE	INTEGER NOT NULL,"+
-        "TRIFA_MESSAGE_TYPE	INTEGER NOT NULL DEFAULT 0,"+
-        "state	INTEGER NOT NULL DEFAULT 1,"+
-        "ft_accepted	BOOLEAN NOT NULL DEFAULT false,"+
-        "ft_outgoing_started	BOOLEAN NOT NULL DEFAULT false,"+
-        "filedb_id	INTEGER NOT NULL DEFAULT -1,"+
-        "filetransfer_id	INTEGER NOT NULL DEFAULT -1,"+
-        "sent_timestamp	INTEGER DEFAULT 0,"+
-        "sent_timestamp_ms	INTEGER DEFAULT 0,"+
-        "rcvd_timestamp	INTEGER DEFAULT 0,"+
-        "rcvd_timestamp_ms	INTEGER DEFAULT 0,"+
-        "filetransfer_kind	INTEGER DEFAULT 0,"+
-        "read	BOOLEAN NOT NULL,"+
-        "send_retries	INTEGER NOT NULL DEFAULT 0,"+
-        "is_new	BOOLEAN NOT NULL,"+
-        "ft_outgoing_queued BOOLEAN NOT NULL,"+
-        "msg_at_relay BOOLEAN NOT NULL,"+
-        "sent_push BOOLEAN NOT NULL,"+
-        "text	TEXT,"+
-        "filename_fullpath	TEXT,"+
-        "msg_idv3_hash	TEXT,"+
-        "msg_id_hash	TEXT,"+
-        "raw_msgv2_bytes	TEXT,"+
-        "msg_version	INTEGER NOT NULL DEFAULT 0,"+
-        "resend_count	INTEGER NOT NULL DEFAULT 2,"+
-        "id	INTEGER,"+
-        "PRIMARY KEY(\"id\" AUTOINCREMENT)"+
-        ");");
 
         Message m = new Message();
         m.tox_friendpubkey = "AAAAAAA";
