@@ -195,7 +195,8 @@ public class TestSorma {
             }
         });
 
-        OrmaDatabase orma = new OrmaDatabase("./main.db", "", wal_mode);
+        // HINT: in this test we do NOT have sqlcipher, so this will always be an unencrypted sqlite3 DB !!
+        OrmaDatabase orma = new OrmaDatabase("./main.db", "superSecretPass124%!%", wal_mode);
         init(2);
         System.out.println(getCurrentTimeStamp() + "orma: " + orma);
 
