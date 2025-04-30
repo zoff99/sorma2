@@ -480,11 +480,6 @@ public class OrmaDatabase
 
     public static int update_db(final int current_db_version)
     {
-        if (current_db_version < THIS_DB_SCHEMA_VERSION)
-        {
-            // HINT: do you schema updates here!
-        }
-
         set_new_db_version(THIS_DB_SCHEMA_VERSION);
         // return the updated DB VERSION
         return THIS_DB_SCHEMA_VERSION;
@@ -513,7 +508,7 @@ public class OrmaDatabase
         // create a database connection
         try
         {
-            // Class.forName("org.sqlite.JDBC");
+            Class.forName("org.sqlite.JDBC");
             sqldb = DriverManager.getConnection("jdbc:sqlite:" + OrmaDatabase.db_file_path);
         }
         catch (Exception e)
