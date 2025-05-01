@@ -152,6 +152,8 @@ public class TestSorma {
 
     public static void main(String[] args) {
         System.out.println("TestSorma v" + Version);
+        System.out.println("Sorma2 [per function]   v" + OrmaDatabase.getVersion());
+        System.out.println("Sorma2 [per static var] v" + OrmaDatabase.OrmaDatabaseVersion);
 
         set_schema_upgrade_callback(new schema_upgrade_callback() {
             @Override
