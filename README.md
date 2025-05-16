@@ -39,7 +39,8 @@ public class Person
 
 now create the Java sources with the Java SORMA2 Generator. <b>you need at least java 17</b>.<br>
 ```bash
-java -classpath ".:sqlite-jdbc-3.49.1.0.jar:sorma2.jar" com/zoffcc/applications/sorm/Generator "gen"
+java -classpath ".:sqlite-jdbc-3.49.1.0.jar:sorma2.jar" \
+  com/zoffcc/applications/sorm/Generator "gen"
 ```
 
 your project is now ready to start.<br>
