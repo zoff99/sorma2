@@ -44,13 +44,13 @@ java -classpath ".:sqlite-jdbc-3.49.1.0.jar:sorma2.jar" \
 ```
 
 your project is now ready to start.<br>
-enter the project directory:
+enter the generator directory:
 ```bash
 cd ./gen/
 ls -al
 ```
 
-now move or copy all *.java files in the `gen` directory into your Android or Java project source tree
+now move or copy all *.java files from the generator directory into your Android or Java project source tree
 ```bash
 cd gen/
 # remove class files
