@@ -15,6 +15,53 @@ see: https://github.com/xerial/sqlite-jdbc/issues/1094<br>
 
 [![build](https://github.com/zoff99/iocipher_pack/actions/workflows/ci.yml/badge.svg)](https://github.com/zoff99/iocipher_pack/actions/workflows/ci.yml)
 
+
+# Usage
+
+create one file for each database table that you need.
+<br>
+create file for db table `Person` as `./gen/_sorm_Person.java`
+<br>(don't worry it is not really Java, we just use the syntax here)
+```Java
+@Table
+public class Person
+{
+    @PrimaryKey(autoincrement = true)
+    public long id;
+    @Column
+    public String name;
+    @Column
+    public String address;
+    @Column
+    public int social_number;
+}
+```
+
+now create the Java sources with the Java SORMA2 Generator. <b>you need at least java 17</b>.<br>
+```bash
+java -classpath ".:sqlite-jdbc-3.49.1.0.jar:sorma2.jar" com/zoffcc/applications/sorm/Generator "gen"
+```
+
+your project is now ready to start.<br>
+enter the project directory:
+```bash
+cd ./gen/
+ls -al
+```
+
+now move or copy all *.java files in the `gen` directory into your Android or Java project source tree
+```bash
+cd gen/
+# remove class files
+find . -name '*.class'|xargs rm -v
+cp -av ./com /home/user/your/project/source/tree/
+```
+
+in your Java project you will need the `sqlite jdbc jar` and in your
+Android project you will need `com.github.zoff99:pkgs_zoffccAndroidJDBC` from [jitpack.io](https://jitpack.io/#zoff99/pkgs_zoffccAndroidJDBC)
+
+
+
 Android Example App:
 ------------------------
 
