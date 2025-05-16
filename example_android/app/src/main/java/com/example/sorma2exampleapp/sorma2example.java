@@ -1,6 +1,7 @@
 package com.example.sorma2exampleapp;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import com.zoffcc.applications.sorm.OrmaDatabase;
@@ -81,6 +82,28 @@ public class sorma2example
     {
         long time_start = System.currentTimeMillis();
 
+        try
+        {
+            System.out.println(TAG + "app version:" + BuildConfig.VERSION_NAME);
+            ret = ret + "\n" + "app version:" + BuildConfig.VERSION_NAME;
+
+            System.out.println(TAG + "git hash:" + BuildConfig.GIT_HASH);
+            ret = ret + "\n" + "git hash:" + BuildConfig.GIT_HASH;
+
+            System.out.println(TAG + "Android API:" + Build.VERSION.SDK_INT);
+            ret = ret + "\n" + "Android API:" + Build.VERSION.SDK_INT;
+        }
+        catch(Exception e)
+        {
+            try
+            {
+                ret = ret + "\n" + "git hash:" + BuildConfig.GIT_HASH;
+            }
+            catch(Exception ignored)
+            {
+            }
+        }
+
         System.out.println(TAG + "starting ...");
         ret = ret + "\n" + "starting ...";
 
@@ -93,6 +116,14 @@ public class sorma2example
         orma = OrmaDatabase_wrapper(dbs_path, PREF__DB_secrect_key, PREF__DB_wal_mode);
         System.out.println(TAG + "db is open");
         ret = ret + "\n" + "db is open";
+
+
+        // show some version information
+        System.out.println(TAG + "orma version: " + orma.getVersion());
+        System.out.println(TAG + "sqlite version: " + OrmaDatabase.get_current_sqlite_version());
+        ret = ret + "\n" + "orma version: " + orma.getVersion();
+        ret = ret + "\n" + "sqlite version: " + OrmaDatabase.get_current_sqlite_version();
+
 
         run_multi_sql("DELETE FROM todo;");
         System.out.println(TAG + "cleaned out table");
