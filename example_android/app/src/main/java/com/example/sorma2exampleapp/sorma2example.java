@@ -119,10 +119,49 @@ public class sorma2example
 
 
         // show some version information
+
+
+        String debug__cipher_version = "unknown";
+        try
+        {
+            debug__cipher_version = orma.run_query_for_single_result("PRAGMA cipher_version");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        String debug__cipher_provider = "unknown";
+        try
+        {
+            debug__cipher_provider = orma.run_query_for_single_result("PRAGMA cipher_provider");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        String debug__cipher_provider_version = "unknown";
+        try
+        {
+            debug__cipher_provider_version = orma.run_query_for_single_result("PRAGMA cipher_provider_version");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+
         System.out.println(TAG + "orma version: " + orma.getVersion());
         System.out.println(TAG + "sqlite version: " + OrmaDatabase.get_current_sqlite_version());
+        System.out.println(TAG + "sqlcipher version: " + debug__cipher_version);
+        System.out.println(TAG + "sqlcipher provider: " + debug__cipher_provider);
+        System.out.println(TAG + "sqlcipher p.ver.: " + debug__cipher_provider_version);
         ret = ret + "\n" + "orma version: " + orma.getVersion();
         ret = ret + "\n" + "sqlite version: " + OrmaDatabase.get_current_sqlite_version();
+        ret = ret + "\n" + "sqlcipher version: " + debug__cipher_version;
+        ret = ret + "\n" + "sqlcipher provider: " + debug__cipher_provider;
+        ret = ret + "\n" + "sqlcipher p.ver.: " + debug__cipher_provider_version;
 
 
         run_multi_sql("DELETE FROM todo;");
