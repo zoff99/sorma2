@@ -150,11 +150,12 @@ public class sorma2example
                 @SuppressWarnings("unused") String title = todo.title;
                 @SuppressWarnings("unused") String content = todo.content;
                 @SuppressWarnings("unused") String createdTime = todo.createdTime;
+                // System.out.println(TAG + "elem: " + todo);
             }
         }
         long end = System.currentTimeMillis();
-        System.out.println(TAG + "Orma/insert " + (end-start) + "ms");
-        ret = ret + "\n" + "Orma/insert " + (end-start) + "ms";
+        System.out.println(TAG + "Orma/forEachAll " + (end-start) + "ms");
+        ret = ret + "\n" + "Orma/forEachAll " + (end-start) + "ms";
     }
 
     private void startInsertWithOrma()
@@ -162,7 +163,7 @@ public class sorma2example
         long start = System.currentTimeMillis();
         for (int j = 0; j < N_OPS; j++)
         {
-            long now = System.currentTimeMillis();
+            final long now = System.currentTimeMillis();
             for (int i = 0; i < N_ITEMS; i++)
             {
                 Todo todo = new Todo();
@@ -173,7 +174,7 @@ public class sorma2example
             }
         }
         long end = System.currentTimeMillis();
-        System.out.println(TAG + "Orma/forEachAll " + (end-start) + "ms");
-        ret = ret + "\n" + "Orma/forEachAll " + (end-start) + "ms";
+        System.out.println(TAG + "Orma/insert " + (end-start) + "ms");
+        ret = ret + "\n" + "Orma/insert " + (end-start) + "ms";
     }
 }
