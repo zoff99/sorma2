@@ -66,6 +66,8 @@ Android project you will need `com.github.zoff99:pkgs_zoffccAndroidJDBC` from [j
 Android Example App:
 ------------------------
 
+see: https://github.com/zoff99/sorma2/tree/master/example_android
+
 <img src="https://github.com/zoff99/sorma2/releases/download/nightly/android_screen01_21.png" height="300"></a><img src="https://github.com/zoff99/sorma2/releases/download/nightly/android_screen01_29.png" height="300"></a><img src="https://github.com/zoff99/sorma2/releases/download/nightly/android_screen01_33.png" height="300"></a><img src="https://github.com/zoff99/sorma2/releases/download/nightly/android_screen01_35.png" height="300"></a>
 <br>
 
