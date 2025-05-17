@@ -77,6 +77,8 @@ Linux Java Example App:
 
 see: https://github.com/zoff99/sorma2/tree/master/test
 
+<img src="https://github.com/zoff99/sorma2/releases/download/nightly/console_screen.png" width="70%">
+
 Use the `sorma_generated.jar` (that is generated in the gen directory) and `sqlite-jdbc-3.49.1.0.jar` for the Java project.<br>
 Check `TestSorma.java` for an Example usage.
 <br>
