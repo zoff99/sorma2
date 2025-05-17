@@ -71,6 +71,17 @@ see: https://github.com/zoff99/sorma2/tree/master/example_android
 <img src="https://github.com/zoff99/sorma2/releases/download/nightly/android_screen01_21.png" height="300"></a><img src="https://github.com/zoff99/sorma2/releases/download/nightly/android_screen01_29.png" height="300"></a><img src="https://github.com/zoff99/sorma2/releases/download/nightly/android_screen01_33.png" height="300"></a><img src="https://github.com/zoff99/sorma2/releases/download/nightly/android_screen01_35.png" height="300"></a>
 <br>
 
+
+Linux Java Example App:
+------------------------
+
+see: https://github.com/zoff99/sorma2/tree/master/test
+
+Use the `sorma_generated.jar` (that is generated in the gen directory) and `sqlite-jdbc-3.49.1.0.jar` for the Java project.<br>
+Check `TestSorma.java` for an Example usage.
+<br>
+
+
 <br>
 Any use of this project's code by GitHub Copilot, past or present, is done
 without our permission.  We do not consent to GitHub's use of this project's
