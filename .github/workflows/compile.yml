@@ -20,6 +20,8 @@ jobs:
 
   test_linux:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs: [update-nightly-tag]
     if: |
       always() &&
@@ -44,6 +46,27 @@ jobs:
         run: |
           ./do_run.sh
 
+      - name: make image of console output
+        run: |
+          date > out_with_date.txt
+          echo -n 'git hash: ' >> out_with_date.txt
+          git rev-parse --verify --short=8 HEAD 2>/dev/null|tr -dc '[A-Fa-f0-9]' 2>/dev/null >> out_with_date.txt
+          echo "" >> out_with_date.txt
+          ./do_run.sh |grep  'sorm.OrmaDatabase'|grep -v 'appending to orma' >> out_with_date.txt
+          cat out_with_date.txt | convert -trim -border 20 -bordercolor black +repage -background black -fill '#00cc00' -pointsize 13 TEXT:- ./console_screen.png
+
+      - name: Upload to nightly release
+        uses: ncipollo/release-action@v1
+        if: github.ref == 'refs/heads/master'
+        with:
+          allowUpdates: true
+          tag: nightly
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          prerelease: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "console_screen*.png"
 
   test_macos:
     runs-on: macos-13
