@@ -30,6 +30,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: install deps
+        run: |
+          sudo apt-get update && \
+          sudo DEBIAN_FRONTEND=noninteractive \
+          apt-get install -y --no-install-recommends \
+          git \
+          fonts-freefont-otf \
+          ghostscript \
+          imagemagick
+
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
