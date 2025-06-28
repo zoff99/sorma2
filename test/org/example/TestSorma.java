@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 
 public class TestSorma {
     private static final String TAG = "TestSorma";
-    static final String Version = "0.99.1";
+    static final String Version = "0.99.2";
     static final boolean wal_mode = true;
 
     static final int iterations_in_threads = 50;
@@ -210,8 +210,10 @@ public class TestSorma {
 
         chkp();
 
-        System.out.println(getCurrentTimeStamp() + "now_datetime_utc      : " + now_datetime_utc());
-        System.out.println(getCurrentTimeStamp() + "now_datetime_localtime: " + now_datetime_localtime());
+        System.out.println(getCurrentTimeStamp() + "now_datetime_utc       : " + now_datetime_utc());
+        System.out.println(getCurrentTimeStamp() + "now_datetime_localtime : " + now_datetime_localtime());
+        System.out.println(getCurrentTimeStamp() + "now_unixepoch_utc      : " + now_unixepoch_utc());
+        System.out.println(getCurrentTimeStamp() + "now_unixepoch_localtime: " + now_unixepoch_localtime());
 
         Message m = new Message();
         m.tox_friendpubkey = "AAAAAAA";
