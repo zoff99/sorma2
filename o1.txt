@@ -762,6 +762,16 @@ public class OrmaDatabase
         return text_result;
     }
 
+    public static String now_datetime_utc()
+    {
+        return run_query_for_single_result("select datetime('now')");
+    }
+
+    public static String now_datetime_localtime()
+    {
+        return run_query_for_single_result("select datetime('now','localtime')");
+    }
+
     public static boolean set_bindvars_where(final PreparedStatement statement,
                                              final int bind_where_count,
                                              final List<OrmaBindvar> bind_where_vars)

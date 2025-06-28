@@ -210,6 +210,9 @@ public class TestSorma {
 
         chkp();
 
+        System.out.println(getCurrentTimeStamp() + "now_datetime_utc      : " + now_datetime_utc());
+        System.out.println(getCurrentTimeStamp() + "now_datetime_localtime: " + now_datetime_localtime());
+
         Message m = new Message();
         m.tox_friendpubkey = "AAAAAAA";
         m.text = "________TEXT11________";
