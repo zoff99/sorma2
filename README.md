@@ -15,6 +15,7 @@ see: https://github.com/xerial/sqlite-jdbc/issues/1094<br>
 
 [![build](https://github.com/zoff99/iocipher_pack/actions/workflows/ci.yml/badge.svg)](https://github.com/zoff99/iocipher_pack/actions/workflows/ci.yml)
 
+<img src="https://raw.githubusercontent.com/zoff99/sorma2/refs/heads/master/sorma2_coms.png" width="300">
 
 # Usage
 
