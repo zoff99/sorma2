@@ -13,6 +13,7 @@ u1='https://jitpack.io/com/github/zoff99/pkgs_zoffccAndroidJDBC/'
 u2='/pkgs_zoffccAndroidJDBC-'
 u3='.aar'
 f1='example_android/app/build.gradle'
+f2='README.md'
 
 tagspec=''
 ver=$(git ls-remote --refs --sort='v:refname' --tags "$r1" 2>/dev/null \
@@ -37,4 +38,5 @@ rm -f "$tf"
 echo "__VERSIONUPDATE__:""$ver"
 
 sed -i -e 's#implementation '"'"'com.github.zoff99:pkgs_zoffccAndroidJDBC:.*#implementation '"'"'com.github.zoff99:pkgs_zoffccAndroidJDBC:'"$ver"''"'"'#' "$f1"
+sed -i -e 's#implementation '"'"'com.github.zoff99:pkgs_zoffccAndroidJDBC:.*#implementation '"'"'com.github.zoff99:pkgs_zoffccAndroidJDBC:'"$ver"''"'"'#' "$f2"
 
