@@ -13,7 +13,7 @@ jobs:
     permissions:
         contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Move nightly tag to head for nightly release
         run: git tag -f nightly && git push origin nightly -f
 
@@ -28,7 +28,7 @@ jobs:
       (needs.update-nightly-tag.result == 'success' ||
         needs.update-nightly-tag.result == 'skipped')
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: install deps
         run: |
@@ -86,7 +86,7 @@ jobs:
       (needs.update-nightly-tag.result == 'success' ||
         needs.update-nightly-tag.result == 'skipped')
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-java@v5
         with:
@@ -113,7 +113,7 @@ jobs:
       (needs.update-nightly-tag.result == 'success' ||
         needs.update-nightly-tag.result == 'skipped')
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-java@v5
         with:
