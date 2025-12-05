@@ -201,7 +201,6 @@ jobs:
       - name: compile and generate sorma2 classes
         shell: bash
         run: |
-          # ./do_run.sh || exit 1
           java -classpath ".;sqlite-jdbc-3.51.1.0.jar:sorma2.jar" com/zoffcc/applications/sorm/Generator "gen"
 
       - name: run with gradle
@@ -214,13 +213,15 @@ jobs:
         shell: bash
         run: |
           cd example_gradle_linux/
-          cat app/main.db|xxd|head -24
+          cat app/main.db|xxd|head -24 || exit 1
 
       - name: check if DB is really encrypted
         shell: bash
         run: |
           cd example_gradle_linux/
-          err=$(cat app/main.db|xxd|head -24|grep "SQLite"||echo "")
+          echo " " >> app/main.db
+          content=$(cat app/main.db 2>/dev/null|xxd 2>/dev/null|head -24 || echo "no ERR")
+          err=$(echo "$content"|grep "SQLite"||echo "")
           if [ "$err""x" != "x" ]; then
             echo "Database may not be encrypted !"
             exit 1
