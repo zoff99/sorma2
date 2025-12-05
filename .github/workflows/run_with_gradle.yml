@@ -213,7 +213,7 @@ jobs:
         shell: bash
         run: |
           cd example_gradle_linux/
-          cat app/main.db|xxd|head -24 || exit 1
+          cat app/main.db 2>/dev/null|xxd 2>/dev/null|head -24 || echo "no ERR"
 
       - name: check if DB is really encrypted
         shell: bash
