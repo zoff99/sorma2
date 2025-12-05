@@ -1,4 +1,6 @@
 main.db
+main.db-shm
+main.db-wal
 # com/zoffcc/applications/sorm/*.class
 org/example/*.class
 test/org/example/
