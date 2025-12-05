@@ -165,6 +165,15 @@ public class App {
         startInsertWithOrma();
         startSelectAllWithOrma();
 
+        try
+        {
+            OrmaDatabase.shutdown();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+
         // all finished
         System.out.println(TAG + "finished.");
     }

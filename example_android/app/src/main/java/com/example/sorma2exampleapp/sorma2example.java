@@ -171,6 +171,15 @@ public class sorma2example
         startInsertWithOrma();
         startSelectAllWithOrma();
 
+        try
+        {
+            OrmaDatabase.shutdown();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+
         // all finished
         System.out.println(TAG + "finished.");
         ret = ret + "\n" + "finished";
