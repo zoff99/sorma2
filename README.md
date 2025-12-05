@@ -1,4 +1,4 @@
-# Sorma<sup>2</sup> - Simple ORM(Android)<sup>2</sup>
+# Sorma<sup>2</sup> - Simple ORM(Android)<sup>2</sup> (and now also for Desktop)
 
 It is based on the wonderful https://github.com/maskarade/Android-Orma by [FUJI Goro](https://github.com/gfx)
 <br>
