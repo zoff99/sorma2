@@ -19,6 +19,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: compile and generate sorma2 classes
+        shell: bash
+        run: |
+          ./do_compile.sh
+          ./do_run.sh || exit 1
+
       - name: run with gradle
         run: |
           cd example_gradle_linux/
@@ -47,6 +53,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: compile and generate sorma2 classes
+        shell: bash
+        run: |
+          ./do_compile.sh
+          ./do_run.sh || exit 1
 
       - name: run with gradle
         run: |
@@ -88,6 +100,12 @@ jobs:
       - name: java-version
         run: java -version
         shell: bash
+
+      - name: compile and generate sorma2 classes
+        shell: bash
+        run: |
+          ./do_compile.sh
+          ./do_run.sh || exit 1
 
       - name: run with gradle
         shell: bash
@@ -133,6 +151,12 @@ jobs:
         run: java -version
         shell: bash
 
+      - name: compile and generate sorma2 classes
+        shell: bash
+        run: |
+          ./do_compile.sh
+          ./do_run.sh || exit 1
+
       - name: run with gradle
         shell: bash
         run: |
@@ -173,6 +197,12 @@ jobs:
       - name: java-version
         run: java -version
         shell: bash
+
+      - name: compile and generate sorma2 classes
+        shell: bash
+        run: |
+          ./do_compile.sh
+          ./do_run.sh || exit 1
 
       - name: run with gradle
         shell: bash
