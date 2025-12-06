@@ -89,7 +89,7 @@ Use the `sorma_generated.jar` (that is generated in the `gen` directory) and `sq
 Check `TestSorma.java` for an Example usage.
 <br>
 
-Linux and Windows Desktop Gradle Example Project
+Desktop (Linux / Windows / macOS) Gradle Example Project
 ------------------------
 see: https://github.com/zoff99/sorma2/tree/master/example_gradle_linux
 <br>
