@@ -79,7 +79,7 @@ jobs:
           artifacts: "console_screen*.png"
 
   test_macos:
-    runs-on: macos-13
+    runs-on: macos-15-intel
     needs: [update-nightly-tag]
     if: |
       always() &&
