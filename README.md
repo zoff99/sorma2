@@ -22,10 +22,9 @@ see: https://github.com/xerial/sqlite-jdbc/issues/1094<br>
 
 <img src="https://raw.githubusercontent.com/zoff99/sorma2/refs/heads/master/sorma2_coms.png" width="300">
 
+## What is Sorma2?
 
 sorma2 is a pure Java code generator designed for efficient SQLite database access. It is suitable for both Android and Desktop Java applications.
-
-## What is Sorma2?
 
 - **Purpose:** Generates Java source code for SQLite ORM based on schema definition files.
 - **Approach:** Unlike runtime ORMs, Sorma2 generates all necessary code at development time, avoiding reflection overhead and ensuring compile-time type safety.
