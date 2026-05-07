@@ -49,7 +49,7 @@ sorma2 is a pure Java code generator designed for efficient SQLite database acce
 - **Type-safe Query Building API:** Ensures compile-time correctness.
 - **Support for Encrypted Databases:** Compatible with SQLCipher.
 - **Multi-threaded Operation:** Supports WAL mode for concurrency.
-- **Cross-platform Compatibility:** Works on Android API 21+ and Desktop Java 17+.
+- **Cross-platform Compatibility:** Works on Android API 21+ and Desktop Java 1.8+.
 
 
 # Usage
