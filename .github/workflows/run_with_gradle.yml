@@ -22,7 +22,7 @@ jobs:
       - name: compile and generate sorma2 classes
         shell: bash
         run: |
-          ./do_compile.sh
+          ./do_compile.sh && ./do_compile_part2_java_17_needed.sh
           ./do_run.sh || exit 1
 
       - name: run with gradle
@@ -57,7 +57,7 @@ jobs:
       - name: compile and generate sorma2 classes
         shell: bash
         run: |
-          ./do_compile.sh
+          ./do_compile.sh && ./do_compile_part2_java_17_needed.sh
           ./do_run.sh || exit 1
 
       - name: run with gradle
@@ -104,7 +104,7 @@ jobs:
       - name: compile and generate sorma2 classes
         shell: bash
         run: |
-          ./do_compile.sh
+          ./do_compile.sh && ./do_compile_part2_java_17_needed.sh
           ./do_run.sh || exit 1
 
       - name: run with gradle
@@ -154,7 +154,7 @@ jobs:
       - name: compile and generate sorma2 classes
         shell: bash
         run: |
-          ./do_compile.sh
+          ./do_compile.sh && ./do_compile_part2_java_17_needed.sh
           ./do_run.sh || exit 1
 
       - name: run with gradle

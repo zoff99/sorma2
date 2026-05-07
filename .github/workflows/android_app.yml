@@ -48,7 +48,7 @@ jobs:
 
       - name: compile
         run: |
-          ./do_compile.sh
+          ./do_compile.sh && ./do_compile_part2_java_17_needed.sh
       - name: test
         run: |
           ./do_run.sh
