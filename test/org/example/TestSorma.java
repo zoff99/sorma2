@@ -155,6 +155,11 @@ public class TestSorma {
         System.out.println("Sorma2 [per function]   v" + OrmaDatabase.getVersion());
         System.out.println("Sorma2 [per static var] v" + OrmaDatabase.OrmaDatabaseVersion);
 
+        // Get the Java runtime version
+        String javaVersion = System.getProperty("java.version");
+        // Display the version
+        System.out.println("Java Runtime Version: " + javaVersion);
+
         set_schema_upgrade_callback(new schema_upgrade_callback() {
             @Override
             public void upgrade(int old_version, int new_version) {
