@@ -21,7 +21,7 @@ public class App {
     private static boolean PREF__DB_wal_mode = true; // use WAL mode
     private static final String PREF__DB_secrect_key = "this is the password: ken sent me !?%";
 
-    static final int N_ITEMS = 500;
+    static final int N_ITEMS = 800;
     static final int N_OPS = 40;
     final static String titlePrefix = "title ";
     final static String contentPrefix = "content content content\n"
@@ -164,6 +164,36 @@ public class App {
 
         startInsertWithOrma();
         startSelectAllWithOrma();
+
+        long startTime1 = System.nanoTime();
+        List<Todo> todos1 = orma.selectFromTodo().orderByCreatedTimeAsc().toList();
+        long endTime1 = System.nanoTime();
+        long duration1 = endTime1 - startTime1;
+        System.out.println(TAG + "Loop 1 took: " + duration1 + " ns (" + (duration1 / 1_000_000.0) + " ms)");
+        int count1 = 0;
+        for (Todo todo : todos1)
+        {
+            String title = todo.title;
+            String content = todo.content;
+            String createdTime = todo.createdTime;
+            if (count1 < 2)  System.out.println(TAG + "elemFull: " + todo);
+            count1++;
+        }
+
+        long startTime2 = System.nanoTime();
+        List<Todo> todos2 = orma.selectFromTodo().orderByCreatedTimeAsc().toList(new String[] {"id"});
+        long endTime2 = System.nanoTime();
+        long duration2 = endTime2 - startTime2;
+        System.out.println(TAG + "Loop 2 took: " + duration2 + " ns (" + (duration2 / 1_000_000.0) + " ms)");
+        int count2 = 0;
+        for (Todo todo : todos2)
+        {
+            String title = todo.title;
+            String content = todo.content;
+            String createdTime = todo.createdTime;
+            if (count2 < 2) System.out.println(TAG + "elemIdTitle: " + todo);
+            count2++;
+        }
 
         try
         {
