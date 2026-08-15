@@ -27,7 +27,6 @@
         List<__@@@TABLE@@@__> list = new ArrayList<>();
         orma_global_sqltolist_lock.lock();
         PreparedStatement statement = null;
-        String saved_sql_start = this.sql_start;
         boolean selectAll = (columns == null || columns.length == 0);
         Set<String> selectedCols = new LinkedHashSet<>();
         if (!selectAll) {
