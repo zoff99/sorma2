@@ -555,13 +555,32 @@ public class Generator {
         return COLTYPE.UNKNOWN;
     }
 
+    private static String sanitizeColumnName(String input)
+    {
+        if (input == null) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < input.length(); i++)
+        {
+            char c = input.charAt(i);
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-')
+            {
+                sb.append(c);
+            }
+            else
+            {
+                sb.append('_');
+            }
+        }
+        return sb.toString();
+    }
+
     static String process_primary_key(final String workdir, final String infilename,
                                     final String outfilename, final String table_name,
                                     final String p)
     {
         final String p2 = remove_public(p);
         final String p3 = remove_type(p2);
-        final String column_name = get_name(p3);
+        final String column_name = sanitizeColumnName(get_name(p3));
         final COLTYPE p5 = get_type(p2);
         final String javatype_firstupper = p5.javatype.substring(0,1).toUpperCase() + p5.javatype.substring(1);
         System.out.println("P: " + column_name + " type: " + p5.name);
@@ -605,7 +624,7 @@ public class Generator {
     {
         final String c2 = remove_public(c);
         final String c3 = remove_type(c2);
-        final String column_name = get_name(c3);
+        final String column_name = sanitizeColumnName(get_name(c3));
         final COLTYPE c5 = get_type(c2);
         System.out.println("C: " + column_name + " type: " + c5.name);
 
