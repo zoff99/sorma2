@@ -40,10 +40,10 @@ public class FileDB
     public long id;
 
     @Column(indexed = true, helpers = Column.Helpers.ALL)
-    public int kind = TOX_FILE_KIND_DATA.value;
+    public int kind = 0; // TOX_FILE_KIND_DATA.value;
 
     @Column(indexed = true, helpers = Column.Helpers.ALL)
-    public int direction = TRIFA_FT_DIRECTION_INCOMING.value;
+    public int direction = 0; // TRIFA_FT_DIRECTION_INCOMING.value;
 
     @Column(indexed = true, helpers = Column.Helpers.ALL)
     public String tox_public_key_string = "";

@@ -54,10 +54,10 @@ public class Message
     public int TOX_MESSAGE_TYPE = 0; // 0 -> normal, 1 -> action
 
     @Column(indexed = true, defaultExpr = "0")
-    public int TRIFA_MESSAGE_TYPE = TRIFA_MSG_TYPE_TEXT.value;
+    public int TRIFA_MESSAGE_TYPE = 0; // TRIFA_MSG_TYPE_TEXT.value;
 
     @Column(indexed = true, defaultExpr = "1", helpers = Column.Helpers.ALL)
-    public int state = TOX_FILE_CONTROL_PAUSE.value;
+    public int state = 0; // TOX_FILE_CONTROL_PAUSE.value;
 
     @Column(indexed = true, defaultExpr = "false", helpers = Column.Helpers.ALL)
     public boolean ft_accepted = false;
@@ -134,7 +134,7 @@ public class Message
 
     @Column(helpers = Column.Helpers.ALL, defaultExpr = "0")
     @Nullable
-    public int filetransfer_kind = TOX_FILE_KIND_DATA.value;
+    public int filetransfer_kind = 0; // TOX_FILE_KIND_DATA.value;
 
     // ______@@SORMA_END@@______
 

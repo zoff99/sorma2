@@ -53,7 +53,7 @@ public class ConferenceDB
     long own_peer_number = -1;
 
     @Column(indexed = true, defaultExpr = "0", helpers = Column.Helpers.ALL)
-    int kind = TOX_CONFERENCE_TYPE_TEXT.value;
+    int kind = 0; // TOX_CONFERENCE_TYPE_TEXT.value;
 
     @Column(indexed = true, defaultExpr = "-1", helpers = Column.Helpers.ALL)
     long tox_conference_number = -1; // this changes often!!

@@ -44,16 +44,16 @@ public class Filetransfer
     public String tox_public_key_string = "";
 
     @Column(indexed = true, helpers = Column.Helpers.ALL)
-    public int direction = TRIFA_FT_DIRECTION_INCOMING.value;
+    public int direction = 0; // TRIFA_FT_DIRECTION_INCOMING.value;
 
     @Column(indexed = true, helpers = Column.Helpers.ALL)
     public long file_number = -1; // given from toxcore!!
 
     @Column(indexed = true, helpers = Column.Helpers.ALL)
-    public int kind = TOX_FILE_KIND_DATA.value;
+    public int kind = 0; // TOX_FILE_KIND_DATA.value;
 
     @Column(indexed = true, helpers = Column.Helpers.ALL)
-    public int state = TOX_FILE_CONTROL_PAUSE.value;
+    public int state = 0; // TOX_FILE_CONTROL_PAUSE.value;
 
     @Column(indexed = true, defaultExpr = "false", helpers = Column.Helpers.ALL)
     public boolean ft_accepted = false;

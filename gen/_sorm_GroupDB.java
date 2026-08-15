@@ -58,7 +58,7 @@ public class GroupDB
     long own_peer_number = -1;
 
     @Column(indexed = true, defaultExpr = "0", helpers = Column.Helpers.ALL)
-    int privacy_state = TOX_GROUP_PRIVACY_STATE.TOX_GROUP_PRIVACY_STATE_PUBLIC.value;
+    int privacy_state = 0; // TOX_GROUP_PRIVACY_STATE.TOX_GROUP_PRIVACY_STATE_PUBLIC.value;
 
     @Column(indexed = true, defaultExpr = "-1", helpers = Column.Helpers.ALL)
     long tox_group_number = -1; // this changes often!!

@@ -63,7 +63,7 @@ public class GroupMessage
     public int TOX_MESSAGE_TYPE = 0; // 0 -> normal, 1 -> action
 
     @Column(indexed = true, defaultExpr = "0")
-    public int TRIFA_MESSAGE_TYPE = TRIFA_MSG_TYPE_TEXT.value;
+    public int TRIFA_MESSAGE_TYPE = 0; // TRIFA_MSG_TYPE_TEXT.value;
 
     @Column(helpers = Column.Helpers.ALL)
     @Nullable
