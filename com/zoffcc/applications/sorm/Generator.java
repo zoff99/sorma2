@@ -592,7 +592,7 @@ public class Generator {
 
         tbl_deepcopy += "        out."+column_name+" = in."+column_name+";" + "\n";
         tbl_tostring += "\""+column_name+"=\" + "+column_name+"";
-        tbl_tolist += "                out."+column_name+" = rs.get"+javatype_firstupper+"(\""+column_name+"\");" + "\n";
+        tbl_tolist += "                if (selectAll || selectedCols.contains(\""+column_name+"\".toLowerCase())) out."+column_name+" = rs.get"+javatype_firstupper+"(\""+column_name+"\");" + "\n";
 
         add_equal_func(table_name, column_name, p5, javatype_firstupper);
         add_orderby_func(table_name, column_name, p5, javatype_firstupper);
@@ -619,7 +619,7 @@ public class Generator {
         final String javatype_firstupper = c5.javatype.substring(0,1).toUpperCase() + c5.javatype.substring(1);
         tbl_deepcopy += "        out."+column_name+" = in."+column_name+";" + "\n";
         tbl_tostring += " + \", "+column_name+"=\" + "+column_name+"";
-        tbl_tolist += "                out."+column_name+" = rs.get"+javatype_firstupper+"(\""+column_name+"\");" + "\n";
+        tbl_tolist += "                if (selectAll || selectedCols.contains(\""+column_name+"\".toLowerCase())) out."+column_name+" = rs.get"+javatype_firstupper+"(\""+column_name+"\");" + "\n";
         // -----------
         String comma = "";
         if (column_num > 1) {comma = ",";}
