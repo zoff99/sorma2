@@ -436,6 +436,7 @@ public class SormaUnitTest {
             assertCondition("Unmodified field preserved after update", "Original Address".equals(afterUpdate.get(0).address));
 
             // --- Test 7b: Update multiple fields at once ---
+            // After this, row1 has: name="Multi Update", address="New Address", social_number=200
             orma.updatePerson().name("Multi Update").address("New Address").social_number(200).idEq(rowId).execute();
             afterUpdate = orma.selectFromPerson().idEq(rowId).toList();
             assertCondition("Multi-field update: name", "Multi Update".equals(afterUpdate.get(0).name));
@@ -443,15 +444,16 @@ public class SormaUnitTest {
             assertCondition("Multi-field update: social_number", afterUpdate.get(0).social_number == 200);
 
             // --- Test 7c: Conditional update (WHERE clause) ---
-            // Insert a second record
+            // Insert a second record with social_number = 300
             Person p2 = new Person();
             p2.name = "Conditional Target";
             p2.address = "Target Addr";
             p2.social_number = 300;
             long rowId2 = orma.insertIntoPerson(p2);
 
-            // Update only records where social_number > 150
-            orma.updatePerson().address("Conditionally Updated").social_numberGt(150).execute();
+            // Update only records where social_number > 250
+            // This should ONLY match row2 (300 > 250), NOT row1 (200 < 250)
+            orma.updatePerson().address("Conditionally Updated").social_numberGt(250).execute();
             List<Person> row1After = orma.selectFromPerson().idEq(rowId).toList();
             List<Person> row2After = orma.selectFromPerson().idEq(rowId2).toList();
             assertCondition("Conditional update affected target row", "Conditionally Updated".equals(row2After.get(0).address));
@@ -476,6 +478,9 @@ public class SormaUnitTest {
     // Tests all generated query builder comparison methods:
     //   Eq, NotEq, Lt, Le, Gt, Ge, Like, NotLike, Between
     // This verifies the generated SQL for each operator is correct.
+    //
+    // NOTE: Sorma2's Between() uses STRICT comparison (> and <), not >= and <=.
+    //       So Between(20, 40) means: x > 20 AND x < 40
     // =========================================================================
     static void testQueryOperators(OrmaDatabase orma) {
         System.out.println("\n--- Test: Query Operators ---");
@@ -484,6 +489,7 @@ public class SormaUnitTest {
             orma.deleteFromPerson().execute();
 
             // Insert 5 records with known values for operator testing
+            // social_number values will be: 10, 20, 30, 40, 50
             for (int i = 1; i <= 5; i++) {
                 Person p = new Person();
                 p.name = "Person_" + i;
@@ -521,10 +527,15 @@ public class SormaUnitTest {
             List<Person> geResult = orma.selectFromPerson().social_numberGe(30).toList();
             assertCondition("Ge operator: social_number >= 30", geResult.size() == 3);
 
-            // --- Test 8g: Between ---
-            // social_number BETWEEN 20 AND 40 should match 20, 30, 40
-            List<Person> betweenResult = orma.selectFromPerson().social_numberBetween(20, 40).toList();
-            assertCondition("Between operator: 20 <= x <= 40", betweenResult.size() == 3);
+            // --- Test 8g: Between (STRICT: x > val1 AND x < val2) ---
+            // IMPORTANT: Sorma2 Between uses strict > and <, NOT >= and <=
+            // Between(15, 45) means: x > 15 AND x < 45 → matches 20, 30, 40
+            List<Person> betweenResult = orma.selectFromPerson().social_numberBetween(15, 45).toList();
+            assertCondition("Between operator: 15 < x < 45 matches 20,30,40", betweenResult.size() == 3);
+
+            // Between(20, 40) means: x > 20 AND x < 40 → matches only 30
+            List<Person> betweenStrict = orma.selectFromPerson().social_numberBetween(20, 40).toList();
+            assertCondition("Between operator: strict bounds (only 30)", betweenStrict.size() == 1 && betweenStrict.get(0).social_number == 30);
 
             // --- Test 8h: Like (pattern matching) ---
             // name LIKE 'Person_%' should match all 5
