@@ -102,6 +102,13 @@ public class SormaUnitTest {
         TestTransactionRollback.run(orma);
         TestMultiColumnOrderBy.run(orma);
         TestRapidLifecycle.run(orma);
+        TestAutoincrementConcurrency.run(orma);
+        TestIntegrityCheck.run(orma);
+        TestDeepChainedConditions.run(orma);
+        TestEmptyTableOperations.run(orma);
+        TestInterleavedMultiTable.run(orma);
+        TestRapidQueryBuilding.run(orma);
+        TestConcurrentDeleteWhileReading.run(orma);
 
         // MUST be last: this test shuts down and reopens the DB
         TestRapidOpenClose.run(orma);
