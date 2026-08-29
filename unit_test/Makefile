@@ -26,9 +26,10 @@ compile_orm: generate_orm
 	javac -cp ../"$(JDBC_JAR)" @gen/sources.txt
 
 compile_test: compile_orm
-	@echo ">> Compiling Unit Test harness..."
+	@echo ">> Compiling Unit Test files..."
 	# Point classpath to 'gen' so it resolves com.zoffcc.applications.sorm.*
-	javac -cp ../"$(JDBC_JAR):gen" SormaUnitTest.java
+	# Compile the main test runner and all individual Test*.java files
+	javac -cp ../"$(JDBC_JAR):gen" SormaUnitTest.java Test*.java
 
 run: compile_test
 	@echo ">> Running Unit Tests..."
@@ -38,5 +39,6 @@ run: compile_test
 clean:
 	@echo ">> Cleaning up..."
 	rm -rf gen
-	rm -f SormaUnitTest.class
+	# Remove all compiled test class files (SormaUnitTest.class + Test*.class)
+	rm -f *.class
 	# * DO NOT CLEAN THIS * # rm -f ../com/zoffcc/applications/sorm/*.class
