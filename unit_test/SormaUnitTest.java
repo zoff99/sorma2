@@ -2,6 +2,10 @@ import com.zoffcc.applications.sorm.OrmaDatabase;
 import com.zoffcc.applications.sorm.Person;
 import com.zoffcc.applications.sorm.OrmaDatabase.schema_upgrade_callback;
 import java.util.List;
+import java.util.Random;
+import java.util.Base64;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -38,21 +42,16 @@ public class SormaUnitTest {
         System.out.println(" Sorma2 Plain Java Unit Tests");
         System.out.println("========================================\n");
 
-        // Use a temporary database file for testing (clean slate each run)
         String dbPath = "./unit_test_db.sqlite";
-        new File(dbPath).delete(); // Delete any leftover DB from previous runs
+        new File(dbPath).delete();
 
-        // Create the ORM database instance (unencrypted, WAL mode OFF initially)
         OrmaDatabase orma = new OrmaDatabase(dbPath, "", false);
 
-        // CRITICAL: Define schema upgrade callback to create tables.
-        // Sorma2 does NOT auto-create tables; you must provide CREATE TABLE statements.
         OrmaDatabase.set_schema_upgrade_callback(new schema_upgrade_callback() {
             @Override
             public void upgrade(int old_version, int new_version) {
                 System.out.println(">> Schema Upgrade: " + old_version + " -> " + new_version);
                 if (new_version >= 1) {
-                    // Create the Person table (matches _sorm_Person.java definition)
                     OrmaDatabase.run_multi_sql(
                         "CREATE TABLE IF NOT EXISTS \"Person\" (\n" +
                         "  \"id\" INTEGER,\n" +
@@ -67,24 +66,23 @@ public class SormaUnitTest {
         });
 
         try {
-            // Initialize the database at schema version 1
             OrmaDatabase.init(1);
         } catch (Exception e) {
             System.out.println("Note: Init exception: " + e.getMessage());
         }
 
         // =============================================
-        // Run all test suites
+        // Original tests
         // =============================================
-
-        // --- Original tests ---
         testBasicCrud(orma);
         testSqlInjectionSecurity(orma);
         testSpecialCharactersAndEncoding(orma);
         testSqliteBusy(orma);
         testHeavyThreading(orma);
 
-        // --- New tests (added) ---
+        // =============================================
+        // Extended tests (batch 1)
+        // =============================================
         testNullAndEmptyStrings(orma);
         testUpdateOperations(orma);
         testQueryOperators(orma);
@@ -92,7 +90,16 @@ public class SormaUnitTest {
         testBulkInsert(orma);
         testBoundaryValues(orma);
 
-        // Shutdown the database and clean up the file
+        // =============================================
+        // Extended tests (batch 2): binary, random, stress
+        // =============================================
+        testBinaryDataAsBase64(orma);
+        testRandomUnicodeAndControlChars(orma);
+        testRapidInsertDeleteCycles(orma);
+        testChainedQueryConditions(orma);
+        testConcurrentReadWriteIntegrity(orma);
+
+        // Shutdown and cleanup
         try { OrmaDatabase.shutdown(); } catch (Exception e) {}
         new File(dbPath).delete();
 
@@ -103,7 +110,6 @@ public class SormaUnitTest {
         System.out.println("Passed: " + passed);
         System.out.println("Failed: " + failed);
         
-        // Exit with error code if any test failed (useful for CI/CD)
         if (failed > 0) {
             System.exit(1);
         }
@@ -750,6 +756,459 @@ public class SormaUnitTest {
 
         } catch (Exception e) {
             assertCondition("Boundary values test failed", false);
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================================
+    // TEST 12: Binary Data as Base64
+    // Since Sorma2 uses TEXT columns (no native BLOB), we store binary data
+    // as Base64-encoded strings. This test generates random byte arrays,
+    // encodes them, stores them, reads them back, decodes, and verifies
+    // byte-for-byte integrity.
+    // =========================================================================
+    static void testBinaryDataAsBase64(OrmaDatabase orma) {
+        System.out.println("\n--- Test: Binary Data as Base64 ---");
+        try {
+            // Clean up before test
+            orma.deleteFromPerson().execute();
+
+            Random rng = new Random(42); // Fixed seed for reproducibility
+
+            // --- Test 12a: Small binary payload (16 bytes) ---
+            byte[] smallBytes = new byte[16];
+            rng.nextBytes(smallBytes);
+            String smallBase64 = Base64.getEncoder().encodeToString(smallBytes);
+
+            Person pSmall = new Person();
+            pSmall.name = smallBase64;
+            pSmall.address = "small binary";
+            pSmall.social_number = 1;
+            long rowIdSmall = orma.insertIntoPerson(pSmall);
+
+            List<Person> smallResult = orma.selectFromPerson().idEq(rowIdSmall).toList();
+            byte[] decodedSmall = Base64.getDecoder().decode(smallResult.get(0).name);
+            assertCondition("16-byte binary round-trip", java.util.Arrays.equals(smallBytes, decodedSmall));
+
+            // --- Test 12b: Medium binary payload (1024 bytes) ---
+            byte[] medBytes = new byte[1024];
+            rng.nextBytes(medBytes);
+            String medBase64 = Base64.getEncoder().encodeToString(medBytes);
+
+            Person pMed = new Person();
+            pMed.name = medBase64;
+            pMed.address = "medium binary";
+            pMed.social_number = 2;
+            long rowIdMed = orma.insertIntoPerson(pMed);
+
+            List<Person> medResult = orma.selectFromPerson().idEq(rowIdMed).toList();
+            byte[] decodedMed = Base64.getDecoder().decode(medResult.get(0).name);
+            assertCondition("1KB binary round-trip", java.util.Arrays.equals(medBytes, decodedMed));
+
+            // --- Test 12c: Large binary payload (64KB) ---
+            // Tests that large Base64 strings don't get truncated
+            byte[] largeBytes = new byte[65536];
+            rng.nextBytes(largeBytes);
+            String largeBase64 = Base64.getEncoder().encodeToString(largeBytes);
+
+            Person pLarge = new Person();
+            pLarge.name = largeBase64;
+            pLarge.address = "large binary";
+            pLarge.social_number = 3;
+            long rowIdLarge = orma.insertIntoPerson(pLarge);
+
+            List<Person> largeResult = orma.selectFromPerson().idEq(rowIdLarge).toList();
+            byte[] decodedLarge = Base64.getDecoder().decode(largeResult.get(0).name);
+            assertCondition("64KB binary round-trip", java.util.Arrays.equals(largeBytes, decodedLarge));
+            assertCondition("64KB binary length preserved", decodedLarge.length == 65536);
+
+            // --- Test 12d: All-zeros binary ---
+            // Edge case: all bytes are 0x00
+            byte[] zeroBytes = new byte[256];
+            java.util.Arrays.fill(zeroBytes, (byte) 0);
+            String zeroBase64 = Base64.getEncoder().encodeToString(zeroBytes);
+
+            Person pZero = new Person();
+            pZero.name = zeroBase64;
+            pZero.address = "all zeros";
+            pZero.social_number = 4;
+            long rowIdZero = orma.insertIntoPerson(pZero);
+
+            List<Person> zeroResult = orma.selectFromPerson().idEq(rowIdZero).toList();
+            byte[] decodedZero = Base64.getDecoder().decode(zeroResult.get(0).name);
+            assertCondition("All-zero bytes round-trip", java.util.Arrays.equals(zeroBytes, decodedZero));
+
+            // --- Test 12e: All-0xFF binary ---
+            // Edge case: all bytes are 0xFF
+            byte[] ffBytes = new byte[256];
+            java.util.Arrays.fill(ffBytes, (byte) 0xFF);
+            String ffBase64 = Base64.getEncoder().encodeToString(ffBytes);
+
+            Person pFF = new Person();
+            pFF.name = ffBase64;
+            pFF.address = "all 0xFF";
+            pFF.social_number = 5;
+            long rowIdFF = orma.insertIntoPerson(pFF);
+
+            List<Person> ffResult = orma.selectFromPerson().idEq(rowIdFF).toList();
+            byte[] decodedFF = Base64.getDecoder().decode(ffResult.get(0).name);
+            assertCondition("All-0xFF bytes round-trip", java.util.Arrays.equals(ffBytes, decodedFF));
+
+            // Cleanup
+            orma.deleteFromPerson().execute();
+
+        } catch (Exception e) {
+            assertCondition("Binary data test failed", false);
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================================
+    // TEST 13: Random Unicode & Control Characters
+    // Tests that the ORM correctly handles arbitrary Unicode code points,
+    // including supplementary planes (emoji, rare CJK), control characters,
+    // zero-width characters, and RTL/LTR marks.
+    // =========================================================================
+    static void testRandomUnicodeAndControlChars(OrmaDatabase orma) {
+        System.out.println("\n--- Test: Random Unicode & Control Characters ---");
+        try {
+            // Clean up before test
+            orma.deleteFromPerson().execute();
+
+            // --- Test 13a: Random Unicode code points (including supplementary planes) ---
+            // Generate a string with random valid Unicode code points
+            Random rng = new Random(123);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 500; i++) {
+                // Generate random code point in valid Unicode range (0 to 0x10FFFF)
+                // Exclude surrogates (0xD800-0xDFFF) as they are not valid alone
+                int cp;
+                do {
+                    cp = rng.nextInt(0x110000); // 0 to 0x10FFFF
+                } while (cp >= 0xD800 && cp <= 0xDFFF); // Skip surrogate range
+                sb.appendCodePoint(cp);
+            }
+            String randomUnicode = sb.toString();
+
+            Person pUnicode = new Person();
+            pUnicode.name = randomUnicode;
+            pUnicode.address = "random unicode";
+            pUnicode.social_number = 1;
+            long rowIdUnicode = orma.insertIntoPerson(pUnicode);
+
+            List<Person> unicodeResult = orma.selectFromPerson().idEq(rowIdUnicode).toList();
+            assertCondition("500 random Unicode code points preserved", randomUnicode.equals(unicodeResult.get(0).name));
+            assertCondition("Random Unicode length preserved", unicodeResult.get(0).name.length() == randomUnicode.length());
+
+            // --- Test 13b: Zero-width and invisible characters ---
+            // These characters are invisible but must be preserved
+            String invisibleChars = "Hello\u200BWorld\u200C!\u200D\uFEFF\u2060";
+            // \u200B = Zero Width Space
+            // \u200C = Zero Width Non-Joiner
+            // \u200D = Zero Width Joiner
+            // \uFEFF = Byte Order Mark / Zero Width No-Break Space
+            // \u2060 = Word Joiner
+
+            Person pInvisible = new Person();
+            pInvisible.name = invisibleChars;
+            pInvisible.address = "invisible chars";
+            pInvisible.social_number = 2;
+            long rowIdInvisible = orma.insertIntoPerson(pInvisible);
+
+            List<Person> invisibleResult = orma.selectFromPerson().idEq(rowIdInvisible).toList();
+            assertCondition("Zero-width characters preserved", invisibleChars.equals(invisibleResult.get(0).name));
+
+            // --- Test 13c: RTL and LTR text mixed ---
+            // Tests bidirectional text handling
+            String rtlLtr = "Hello \u0645\u0631\u062D\u0628\u0627 World \u05E9\u05DC\u05D5\u05DD End";
+            // Contains Arabic and Hebrew mixed with English
+
+            Person pRtl = new Person();
+            pRtl.name = rtlLtr;
+            pRtl.address = "bidi text";
+            pRtl.social_number = 3;
+            long rowIdRtl = orma.insertIntoPerson(pRtl);
+
+            List<Person> rtlResult = orma.selectFromPerson().idEq(rowIdRtl).toList();
+            assertCondition("RTL/LTR mixed text preserved", rtlLtr.equals(rtlResult.get(0).name));
+
+            // --- Test 13d: Control characters (except NULL byte) ---
+            // SQLite TEXT cannot reliably store 0x00, but other control chars should work
+            StringBuilder controlSb = new StringBuilder();
+            for (int i = 1; i < 32; i++) { // Skip 0x00 (NULL), include 0x01-0x1F
+                controlSb.append((char) i);
+            }
+            String controlChars = controlSb.toString();
+
+            Person pControl = new Person();
+            pControl.name = controlChars;
+            pControl.address = "control chars";
+            pControl.social_number = 4;
+            long rowIdControl = orma.insertIntoPerson(pControl);
+
+            List<Person> controlResult = orma.selectFromPerson().idEq(rowIdControl).toList();
+            assertCondition("Control characters (0x01-0x1F) preserved", controlChars.equals(controlResult.get(0).name));
+
+            // --- Test 13e: Repeated emoji sequences (multi-codepoint graphemes) ---
+            // Family emoji (multiple code points joined by ZWJ)
+            String familyEmoji = "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66"; // 👨‍👩‍👧‍👦
+            String repeatedEmoji = familyEmoji + familyEmoji + familyEmoji;
+
+            Person pEmoji = new Person();
+            pEmoji.name = repeatedEmoji;
+            pEmoji.address = "complex emoji";
+            pEmoji.social_number = 5;
+            long rowIdEmoji = orma.insertIntoPerson(pEmoji);
+
+            List<Person> emojiResult = orma.selectFromPerson().idEq(rowIdEmoji).toList();
+            assertCondition("Complex emoji sequences preserved", repeatedEmoji.equals(emojiResult.get(0).name));
+
+            // Cleanup
+            orma.deleteFromPerson().execute();
+
+        } catch (Exception e) {
+            assertCondition("Random Unicode test failed", false);
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================================
+    // TEST 14: Rapid Insert/Delete Cycles
+    // Stress test that rapidly inserts and deletes records in a loop to
+    // detect memory leaks, resource exhaustion, or database corruption
+    // from repeated allocation/deallocation cycles.
+    // =========================================================================
+    static void testRapidInsertDeleteCycles(OrmaDatabase orma) {
+        System.out.println("\n--- Test: Rapid Insert/Delete Cycles ---");
+        try {
+            // Clean up before test
+            orma.deleteFromPerson().execute();
+
+            int cycles = 100;        // Number of insert/delete cycles
+            int batchSize = 50;      // Records per cycle
+            boolean corruptionDetected = false;
+
+            long startTime = System.currentTimeMillis();
+
+            for (int cycle = 0; cycle < cycles; cycle++) {
+                // Insert a batch of records
+                for (int i = 0; i < batchSize; i++) {
+                    Person p = new Person();
+                    p.name = "Cycle_" + cycle + "_Item_" + i;
+                    p.address = "addr";
+                    p.social_number = cycle * batchSize + i;
+                    orma.insertIntoPerson(p);
+                }
+
+                // Verify count is correct after insert
+                int countAfterInsert = orma.selectFromPerson().count();
+                if (countAfterInsert != batchSize) {
+                    corruptionDetected = true;
+                    break;
+                }
+
+                // Delete all records
+                orma.deleteFromPerson().execute();
+
+                // Verify count is 0 after delete
+                int countAfterDelete = orma.selectFromPerson().count();
+                if (countAfterDelete != 0) {
+                    corruptionDetected = true;
+                    break;
+                }
+            }
+
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+
+            assertCondition("No corruption in " + cycles + " insert/delete cycles", !corruptionDetected);
+            assertCondition("Final state is clean (0 records)", orma.selectFromPerson().count() == 0);
+            System.out.println("  [INFO] " + cycles + " cycles x " + batchSize + " records took " + duration + "ms");
+            // Performance sanity: should complete in under 60 seconds
+            assertCondition("Rapid cycles performance acceptable (< 60s)", duration < 60000);
+
+        } catch (Exception e) {
+            assertCondition("Rapid insert/delete test failed", false);
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================================
+    // TEST 15: Chained Query Conditions
+    // Tests that multiple WHERE conditions can be chained together correctly.
+    // Verifies that the generated SQL properly combines multiple AND clauses.
+    // =========================================================================
+    static void testChainedQueryConditions(OrmaDatabase orma) {
+        System.out.println("\n--- Test: Chained Query Conditions ---");
+        try {
+            // Clean up and insert diverse test data
+            orma.deleteFromPerson().execute();
+
+            // Insert records with varied attributes for filtering
+            Person p1 = new Person(); p1.name = "Alice";   p1.address = "NYC";     p1.social_number = 10; orma.insertIntoPerson(p1);
+            Person p2 = new Person(); p2.name = "Bob";     p2.address = "NYC";     p2.social_number = 20; orma.insertIntoPerson(p2);
+            Person p3 = new Person(); p3.name = "Charlie"; p3.address = "LA";      p3.social_number = 30; orma.insertIntoPerson(p3);
+            Person p4 = new Person(); p4.name = "Diana";   p4.address = "LA";      p4.social_number = 40; orma.insertIntoPerson(p4);
+            Person p5 = new Person(); p5.name = "Eve";     p5.address = "Chicago"; p5.social_number = 50; orma.insertIntoPerson(p5);
+
+            assertCondition("Setup: 5 records inserted", orma.selectFromPerson().count() == 5);
+
+            // --- Test 15a: Two conditions (address AND social_number) ---
+            // Find people in NYC with social_number > 15
+            // Should match only Bob (NYC, 20)
+            List<Person> twoCond = orma.selectFromPerson()
+                .addressEq("NYC")
+                .social_numberGt(15)
+                .toList();
+            assertCondition("Two chained conditions: correct result", twoCond.size() == 1 && "Bob".equals(twoCond.get(0).name));
+
+            // --- Test 15b: Three conditions ---
+            // Find people in LA with social_number >= 30 and name LIKE 'D%'
+            // Should match only Diana
+            List<Person> threeCond = orma.selectFromPerson()
+                .addressEq("LA")
+                .social_numberGe(30)
+                .nameLike("D%")
+                .toList();
+            assertCondition("Three chained conditions: correct result", threeCond.size() == 1 && "Diana".equals(threeCond.get(0).name));
+
+            // --- Test 15c: Range + equality combined ---
+            // social_number between 15 and 45 (exclusive: > 15 AND < 45) AND address = NYC
+            // Should match only Bob (20, NYC)
+            List<Person> rangeCond = orma.selectFromPerson()
+                .social_numberBetween(15, 45)
+                .addressEq("NYC")
+                .toList();
+            assertCondition("Range + equality: correct result", rangeCond.size() == 1 && "Bob".equals(rangeCond.get(0).name));
+
+            // --- Test 15d: Condition that matches nothing ---
+            // No one lives in "Atlantis"
+            List<Person> noMatch = orma.selectFromPerson()
+                .addressEq("Atlantis")
+                .social_numberGt(0)
+                .toList();
+            assertCondition("Chained conditions with no match returns empty", noMatch.size() == 0);
+
+            // --- Test 15e: All conditions match all records ---
+            // social_number > 0 matches everyone
+            List<Person> allMatch = orma.selectFromPerson()
+                .social_numberGt(0)
+                .nameIsNotNull()
+                .toList();
+            assertCondition("Broad conditions match all records", allMatch.size() == 5);
+
+            // Cleanup
+            orma.deleteFromPerson().execute();
+
+        } catch (Exception e) {
+            assertCondition("Chained query conditions test failed", false);
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================================
+    // TEST 16: Concurrent Read/Write Integrity
+    // A more aggressive concurrency test where writers insert known data
+    // and readers verify data consistency in real-time. Ensures no partial
+    // reads or corrupted data under concurrent access.
+    // =========================================================================
+    static void testConcurrentReadWriteIntegrity(OrmaDatabase orma) {
+        System.out.println("\n--- Test: Concurrent Read/Write Integrity ---");
+        try {
+            // Enable WAL mode and set busy timeout for concurrency
+            OrmaDatabase.run_query_for_single_result("PRAGMA journal_mode=WAL;");
+            OrmaDatabase.run_query_for_single_result("PRAGMA busy_timeout = 5000;");
+
+            // Clean up before test
+            orma.deleteFromPerson().execute();
+
+            int numWriters = 3;
+            int numReaders = 5;
+            int writesPerThread = 30;
+            final AtomicInteger totalInserts = new AtomicInteger(0);
+            final AtomicBoolean integrityViolation = new AtomicBoolean(false);
+            final AtomicBoolean errorOccurred = new AtomicBoolean(false);
+
+            Thread[] writers = new Thread[numWriters];
+            Thread[] readers = new Thread[numReaders];
+
+            // Writer threads: insert records with predictable data
+            for (int i = 0; i < numWriters; i++) {
+                final int writerId = i;
+                writers[i] = new Thread(() -> {
+                    for (int j = 0; j < writesPerThread; j++) {
+                        try {
+                            Person p = new Person();
+                            // Use a predictable pattern so readers can verify
+                            p.name = "W" + writerId + "_" + j;
+                            p.address = "integrity_test";
+                            p.social_number = writerId * 10000 + j;
+                            orma.insertIntoPerson(p);
+                            totalInserts.incrementAndGet();
+
+                            // Small delay to interleave with readers
+                            Thread.sleep(1);
+                        } catch (Exception e) {
+                            errorOccurred.set(true);
+                        }
+                    }
+                });
+            }
+
+            // Reader threads: continuously read and verify data integrity
+            for (int i = 0; i < numReaders; i++) {
+                readers[i] = new Thread(() -> {
+                    for (int j = 0; j < writesPerThread * 2; j++) {
+                        try {
+                            // Read all records and verify none have corrupted fields
+                            List<Person> allRecords = orma.selectFromPerson()
+                                .addressEq("integrity_test")
+                                .toList();
+
+                            for (Person record : allRecords) {
+                                // Verify name follows expected pattern: W<id>_<num>
+                                if (record.name != null && !record.name.startsWith("W")) {
+                                    integrityViolation.set(true);
+                                }
+                                // Verify social_number is non-negative
+                                if (record.social_number < 0) {
+                                    integrityViolation.set(true);
+                                }
+                            }
+
+                            Thread.sleep(2);
+                        } catch (Exception e) {
+                            // SQLITE_BUSY is acceptable under heavy load
+                            String msg = getRootCauseMessage(e);
+                            if (!msg.contains("SQLITE_BUSY") && !msg.contains("database is locked")) {
+                                errorOccurred.set(true);
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Start all threads
+            for (Thread t : readers) t.start();
+            for (Thread t : writers) t.start();
+
+            // Wait for completion
+            for (Thread t : writers) t.join();
+            for (Thread t : readers) t.join();
+
+            // Final verification: count should match total inserts
+            int finalCount = orma.selectFromPerson().count();
+            int expectedTotal = numWriters * writesPerThread;
+
+            assertCondition("No integrity violations during concurrent access", !integrityViolation.get());
+            assertCondition("No unexpected errors during concurrent access", !errorOccurred.get());
+            assertCondition("Final count matches total inserts (" + finalCount + "/" + expectedTotal + ")", finalCount == expectedTotal);
+
+            // Cleanup
+            orma.deleteFromPerson().execute();
+
+        } catch (Exception e) {
+            assertCondition("Concurrent read/write integrity test failed", false);
             e.printStackTrace();
         }
     }
