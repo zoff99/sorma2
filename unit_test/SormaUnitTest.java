@@ -1,5 +1,6 @@
 import com.zoffcc.applications.sorm.OrmaDatabase;
 import com.zoffcc.applications.sorm.Person;
+import com.zoffcc.applications.sorm.ColumnMatch;
 import com.zoffcc.applications.sorm.OrmaDatabase.schema_upgrade_callback;
 import java.util.List;
 import java.util.Random;
@@ -53,12 +54,26 @@ public class SormaUnitTest {
             public void upgrade(int old_version, int new_version) {
                 System.out.println(">> Schema Upgrade: " + old_version + " -> " + new_version);
                 if (new_version >= 1) {
+                    // Original Person table
                     OrmaDatabase.run_multi_sql(
                         "CREATE TABLE IF NOT EXISTS \"Person\" (\n" +
                         "  \"id\" INTEGER,\n" +
                         "  \"name\" TEXT,\n" +
                         "  \"address\" TEXT,\n" +
                         "  \"social_number\" INTEGER,\n" +
+                        "  PRIMARY KEY(\"id\" AUTOINCREMENT)\n" +
+                        ");"
+                    );
+                    // ColumnMatch table with confusingly similar column names
+                    // Tests that AB does not match ABC, ABC does not match ABCD, etc.
+                    OrmaDatabase.run_multi_sql(
+                        "CREATE TABLE IF NOT EXISTS \"ColumnMatch\" (\n" +
+                        "  \"id\" INTEGER,\n" +
+                        "  \"AB\" TEXT,\n" +
+                        "  \"ABC\" TEXT,\n" +
+                        "  \"ABCD\" TEXT,\n" +
+                        "  \"AB_int\" INTEGER,\n" +
+                        "  \"ABC_int\" INTEGER,\n" +
                         "  PRIMARY KEY(\"id\" AUTOINCREMENT)\n" +
                         ");"
                     );
@@ -104,6 +119,11 @@ public class SormaUnitTest {
         // Extended tests (batch 3): raw binary through TEXT
         // =============================================
         testRawBytesThroughTextColumn(orma);
+
+        // =============================================
+        // Extended tests (batch 4): column name matching
+        // =============================================
+        testColumnNameMatching(orma);
 
         // Shutdown and cleanup
         try { OrmaDatabase.shutdown(); } catch (Exception e) {}
@@ -1393,6 +1413,148 @@ public class SormaUnitTest {
 
         } catch (Exception e) {
             assertCondition("Raw bytes through TEXT test failed", false);
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================================
+    // TEST 18: Column Name Matching Precision
+    // Verifies that the generated query builder correctly targets specific
+    // columns by exact name, and does NOT accidentally match columns with
+    // similar prefixes.
+    //
+    // Table schema: AB, ABC, ABCD, AB_int, ABC_int
+    // Tests that:
+    //   - ABEq() only matches column "AB", not "ABC" or "ABCD"
+    //   - ABCEq() only matches column "ABC", not "AB" or "ABCD"
+    //   - ABCDEq() only matches column "ABCD"
+    //   - AB_intEq() only matches "AB_int", not "ABC_int"
+    //   - Filtering on one column does not affect rows matched by another
+    // =========================================================================
+    static void testColumnNameMatching(OrmaDatabase orma) {
+        System.out.println("\n--- Test: Column Name Matching Precision ---");
+        try {
+            // Clean up before test
+            orma.deleteFromColumnMatch().execute();
+
+            // --- Setup: Insert rows where each column has a UNIQUE value ---
+            // If column matching is wrong, queries will return unexpected results.
+            //
+            // Row 1: AB="val_AB", ABC="val_ABC", ABCD="val_ABCD", AB_int=1, ABC_int=100
+            // Row 2: AB="val_ABC", ABC="val_AB", ABCD="val_AB", AB_int=100, ABC_int=1
+            // Row 3: AB="x", ABC="x", ABCD="x", AB_int=42, ABC_int=42
+            //
+            // Row 2 is the tricky one: it has "val_ABC" in the AB column
+            // and "val_AB" in the ABC column (swapped values).
+
+            ColumnMatch row1 = new ColumnMatch();
+            row1.AB = "val_AB";
+            row1.ABC = "val_ABC";
+            row1.ABCD = "val_ABCD";
+            row1.AB_int = 1;
+            row1.ABC_int = 100;
+            long id1 = orma.insertIntoColumnMatch(row1);
+
+            ColumnMatch row2 = new ColumnMatch();
+            row2.AB = "val_ABC";       // Deliberately confusing: "val_ABC" in column AB
+            row2.ABC = "val_AB";       // Deliberately confusing: "val_AB" in column ABC
+            row2.ABCD = "val_AB";      // Same value as ABC
+            row2.AB_int = 100;         // Swapped with ABC_int
+            row2.ABC_int = 1;          // Swapped with AB_int
+            long id2 = orma.insertIntoColumnMatch(row2);
+
+            ColumnMatch row3 = new ColumnMatch();
+            row3.AB = "x";
+            row3.ABC = "x";
+            row3.ABCD = "x";
+            row3.AB_int = 42;
+            row3.ABC_int = 42;
+            long id3 = orma.insertIntoColumnMatch(row3);
+
+            assertCondition("Setup: 3 ColumnMatch rows inserted", orma.selectFromColumnMatch().count() == 3);
+
+            // --- Test 18a: ABEq targets ONLY column "AB" ---
+            // Looking for AB = "val_AB" should match ONLY row1 (not row2 which has "val_ABC" in AB)
+            List<ColumnMatch> abResult = orma.selectFromColumnMatch().ABEq("val_AB").toList();
+            assertCondition("ABEq('val_AB') matches exactly 1 row", abResult.size() == 1);
+            assertCondition("ABEq('val_AB') returns correct row (id1)", abResult.get(0).id == id1);
+
+            // --- Test 18b: ABCEq targets ONLY column "ABC" ---
+            // Looking for ABC = "val_AB" should match ONLY row2 (not row1 which has "val_AB" in AB column)
+            List<ColumnMatch> abcResult = orma.selectFromColumnMatch().ABCEq("val_AB").toList();
+            assertCondition("ABCEq('val_AB') matches exactly 1 row", abcResult.size() == 1);
+            assertCondition("ABCEq('val_AB') returns correct row (id2)", abcResult.get(0).id == id2);
+
+            // --- Test 18c: ABCDEq targets ONLY column "ABCD" ---
+            // Looking for ABCD = "val_ABCD" should match ONLY row1
+            List<ColumnMatch> abcdResult = orma.selectFromColumnMatch().ABCDEq("val_ABCD").toList();
+            assertCondition("ABCDEq('val_ABCD') matches exactly 1 row", abcdResult.size() == 1);
+            assertCondition("ABCDEq('val_ABCD') returns correct row (id1)", abcdResult.get(0).id == id1);
+
+            // --- Test 18d: AB_intEq targets ONLY "AB_int", not "ABC_int" ---
+            // AB_int = 1 should match ONLY row1 (row2 has AB_int=100, ABC_int=1)
+            List<ColumnMatch> abIntResult = orma.selectFromColumnMatch().AB_intEq(1).toList();
+            assertCondition("AB_intEq(1) matches exactly 1 row", abIntResult.size() == 1);
+            assertCondition("AB_intEq(1) returns row1 (not row2)", abIntResult.get(0).id == id1);
+
+            // --- Test 18e: ABC_intEq targets ONLY "ABC_int", not "AB_int" ---
+            // ABC_int = 1 should match ONLY row2 (row1 has ABC_int=100, AB_int=1)
+            List<ColumnMatch> abcIntResult = orma.selectFromColumnMatch().ABC_intEq(1).toList();
+            assertCondition("ABC_intEq(1) matches exactly 1 row", abcIntResult.size() == 1);
+            assertCondition("ABC_intEq(1) returns row2 (not row1)", abcIntResult.get(0).id == id2);
+
+            // --- Test 18f: Chained conditions with similar column names ---
+            // AB = "val_ABC" AND ABC = "val_AB" should match ONLY row2
+            List<ColumnMatch> chainedResult = orma.selectFromColumnMatch()
+                .ABEq("val_ABC")
+                .ABCEq("val_AB")
+                .toList();
+            assertCondition("Chained AB+ABC targets correct columns", chainedResult.size() == 1);
+            assertCondition("Chained result is row2", chainedResult.get(0).id == id2);
+
+            // --- Test 18g: Query that should return NOTHING (cross-column mismatch) ---
+            // AB = "val_ABC" AND ABC = "val_ABC" → no row has both
+            List<ColumnMatch> noMatch = orma.selectFromColumnMatch()
+                .ABEq("val_ABC")
+                .ABCEq("val_ABC")
+                .toList();
+            assertCondition("Cross-column mismatch returns 0 rows", noMatch.size() == 0);
+
+            // --- Test 18h: UPDATE targets correct column ---
+            // Update only AB where AB_int = 42, verify ABC and ABCD are unchanged
+            orma.updateColumnMatch().AB("UPDATED").AB_intEq(42).execute();
+            List<ColumnMatch> afterUpdate = orma.selectFromColumnMatch().idEq(id3).toList();
+            assertCondition("UPDATE targets correct column (AB changed)", "UPDATED".equals(afterUpdate.get(0).AB));
+            assertCondition("UPDATE does not affect ABC column", "x".equals(afterUpdate.get(0).ABC));
+            assertCondition("UPDATE does not affect ABCD column", "x".equals(afterUpdate.get(0).ABCD));
+
+            // --- Test 18i: LIKE on specific column doesn't cross-match ---
+            // AB LIKE 'val_%' should match row1 (AB="val_AB") and row2 (AB="val_ABC")
+            List<ColumnMatch> likeAB = orma.selectFromColumnMatch().ABLike("val_%").toList();
+            assertCondition("ABLike('val_%') matches 2 rows", likeAB.size() == 2);
+
+            // ABCD LIKE 'val_ABC%' should match ONLY row1 (ABCD="val_ABCD")
+            // Row2 has ABCD="val_AB" which does NOT match "val_ABC%"
+            List<ColumnMatch> likeABCD = orma.selectFromColumnMatch().ABCDLike("val_ABC%").toList();
+            assertCondition("ABCDLike('val_ABC%') matches 1 row", likeABCD.size() == 1);
+            assertCondition("ABCDLike returns correct row (id1)", likeABCD.get(0).id == id1);
+
+            // ABCD LIKE 'val_AB' should match ONLY row2 (ABCD="val_AB")
+            // This proves LIKE targets ABCD column specifically, not AB column
+            List<ColumnMatch> likeABCD2 = orma.selectFromColumnMatch().ABCDLike("val_AB").toList();
+            assertCondition("ABCDLike('val_AB') matches row2 only", likeABCD2.size() == 1);
+            assertCondition("ABCDLike('val_AB') returns row2", likeABCD2.get(0).id == id2);
+
+            // --- Test 18j: NotEq on similar columns ---
+            // AB NotEq "val_AB" should return row2 and row3 (not row1)
+            List<ColumnMatch> notEqResult = orma.selectFromColumnMatch().ABNotEq("val_AB").toList();
+            assertCondition("ABNotEq excludes only matching row", notEqResult.size() == 2);
+
+            // Cleanup
+            orma.deleteFromColumnMatch().execute();
+
+        } catch (Exception e) {
+            assertCondition("Column name matching test failed", false);
             e.printStackTrace();
         }
     }
