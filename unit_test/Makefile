@@ -16,7 +16,7 @@ prepare_gen:
 generate_orm: prepare_gen compile_generator
 	@echo ">> Generating ORM code..."
 	# Run from repo root so the generator can find its template files (o1.txt, tbl01.txt, etc.)
-	cd .. && java -cp "test/sqlite-jdbc-3.53.2.1.jar:." com.zoffcc.applications.sorm.Generator "unit_test/gen"
+	cd .. && java -cp "$(JDBC_JAR):." com.zoffcc.applications.sorm.Generator "unit_test/gen"
 
 compile_orm: generate_orm
 	@echo ">> Compiling GENERATED ORM classes only..."
@@ -39,4 +39,4 @@ clean:
 	@echo ">> Cleaning up..."
 	rm -rf gen
 	rm -f SormaUnitTest.class
-	rm -f ../com/zoffcc/applications/sorm/*.class
+	# * DO NOT CLEAN THIS * # rm -f ../com/zoffcc/applications/sorm/*.class
