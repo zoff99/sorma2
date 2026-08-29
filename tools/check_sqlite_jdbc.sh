@@ -33,6 +33,7 @@ f1="do_actual_run_java_8.sh"
 f2="do_compile_part1_java_17_needed.sh"
 f3="README.md"
 f4="do_compile_part2_java_17_needed.sh"
+f5="unit_test/Makefile"
 
 # download new jar
 wget "$url" -O x.jar
@@ -45,6 +46,7 @@ sed -i -e 's#sqlite-jdbc-[^:]*\.jar#'"$file"'#' "$f1"
 sed -i -e 's#sqlite-jdbc-[^:]*\.jar#'"$file"'#' "$f2"
 sed -i -e 's#sqlite-jdbc-[^:]*\.jar#'"$file"'#' "$f3"
 sed -i -e 's#sqlite-jdbc-[^:]*\.jar#'"$file"'#' "$f4"
+sed -i -e 's#sqlite-jdbc-[^:]*\.jar#'"$file"'#' "$f5"
 
 if [ "$1""x" == "nocommitx" ]; then
     echo "no commit"
@@ -52,7 +54,7 @@ if [ "$1""x" == "nocommitx" ]; then
 fi
 
 git add ./test/"$file"
-git add "$f1" "$f2" "$f3" "$f3"
+git add "$f1" "$f2" "$f3" "$f4" "$f5"
 
 git commit -m 'update to '"$file"
 
