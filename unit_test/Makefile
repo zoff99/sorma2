@@ -12,6 +12,7 @@ prepare_gen:
 	mkdir -p gen
 	cp _sorm_Person.java gen/
 	cp _sorm_ColumnMatch.java gen/
+	cp _sorm_BoolTest.java gen/
 
 generate_orm: prepare_gen compile_generator
 	@echo ">> Generating ORM code..."

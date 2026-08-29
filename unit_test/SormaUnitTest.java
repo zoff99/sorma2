@@ -57,6 +57,18 @@ public class SormaUnitTest {
                         "  PRIMARY KEY(\"id\" AUTOINCREMENT)\n" +
                         ");"
                     );
+                    // BoolTest table for boolean column handling
+                    OrmaDatabase.run_multi_sql(
+                        "CREATE TABLE IF NOT EXISTS \"BoolTest\" (\n" +
+                        "  \"id\" INTEGER,\n" +
+                        "  \"label\" TEXT,\n" +
+                        "  \"is_active\" BOOLEAN,\n" +
+                        "  \"is_deleted\" BOOLEAN,\n" +
+                        "  \"has_permission\" BOOLEAN,\n" +
+                        "  \"priority\" INTEGER,\n" +
+                        "  PRIMARY KEY(\"id\" AUTOINCREMENT)\n" +
+                        ");"
+                    );
                 }
             }
         });
@@ -83,6 +95,7 @@ public class SormaUnitTest {
         TestBoundaryValues.run(orma);
         TestRawBytesText.run(orma);
         TestColumnNameMatching.run(orma);
+        TestBooleanHandling.run(orma);
 
         // MUST be last: this test shuts down and reopens the DB
         TestRapidOpenClose.run(orma);
