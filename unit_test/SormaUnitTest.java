@@ -84,6 +84,9 @@ public class SormaUnitTest {
         TestRawBytesText.run(orma);
         TestColumnNameMatching.run(orma);
 
+        // MUST be last: this test shuts down and reopens the DB
+        TestRapidOpenClose.run(orma);
+
         // Shutdown and cleanup
         try { OrmaDatabase.shutdown(); } catch (Exception e) {}
         new File(dbPath).delete();
