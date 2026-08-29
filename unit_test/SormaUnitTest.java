@@ -110,6 +110,9 @@ public class SormaUnitTest {
         TestRapidQueryBuilding.run(orma);
         TestConcurrentDeleteWhileReading.run(orma);
 
+        // THE GAUNTLET
+        TestExtremeStress.run(orma);
+
         // MUST be last: this test shuts down and reopens the DB
         TestRapidOpenClose.run(orma);
 
