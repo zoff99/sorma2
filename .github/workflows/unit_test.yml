@@ -1,0 +1,115 @@
+name: unit test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: dummy
+        default: dummy
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: run unit tests
+        shell: bash
+        run: |
+          cd unit_test/
+          make
+
+  linux-arm64:
+    runs-on: ubuntu-22.04-arm
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: run unit tests
+        shell: bash
+        run: |
+          cd unit_test/
+          make
+
+  macos64:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: macos-version1
+        run: sw_vers -productVersion
+
+      - name: macos-version2
+        run: system_profiler SPSoftwareDataType
+
+      - name: java-version
+        run: java -version
+        shell: bash
+
+      - name: run unit tests
+        shell: bash
+        run: |
+          cd unit_test/
+          make
+
+  macos-14arm:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: macos-version1
+        run: sw_vers -productVersion
+
+      - name: macos-version2
+        run: system_profiler SPSoftwareDataType
+
+      - name: java-version
+        run: java -version
+        shell: bash
+
+      - name: run unit tests
+        shell: bash
+        run: |
+          cd unit_test/
+          make
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Display the path
+        run: echo %PATH%
+        shell: cmd
+
+      - name: java-version
+        run: java -version
+        shell: bash
+
+      - name: run unit tests
+        shell: bash
+        run: |
+          cd unit_test/
+          make
+
