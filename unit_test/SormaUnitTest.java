@@ -7,6 +7,7 @@ import java.util.Base64;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -98,6 +99,11 @@ public class SormaUnitTest {
         testRapidInsertDeleteCycles(orma);
         testChainedQueryConditions(orma);
         testConcurrentReadWriteIntegrity(orma);
+
+        // =============================================
+        // Extended tests (batch 3): raw binary through TEXT
+        // =============================================
+        testRawBytesThroughTextColumn(orma);
 
         // Shutdown and cleanup
         try { OrmaDatabase.shutdown(); } catch (Exception e) {}
@@ -1209,6 +1215,184 @@ public class SormaUnitTest {
 
         } catch (Exception e) {
             assertCondition("Concurrent read/write integrity test failed", false);
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================================
+    // TEST 17: Raw Bytes Through Sorma2 TEXT Column (ISO-8859-1)
+    // Pushes actual raw binary data through Sorma2's TEXT column using
+    // ISO-8859-1 encoding, which maps each byte (0x00-0xFF) directly to
+    // the corresponding Unicode code point (U+0000-U+00FF).
+    //
+    // This test verifies:
+    //   - Bytes 0x01-0xFF survive the round-trip through SQLite TEXT
+    //   - NULL byte (0x00) behavior is documented (may be truncated)
+    //   - Random binary payloads without NULL bytes are preserved
+    //   - All 255 non-NULL byte values are stored and retrieved correctly
+    //
+    // NOTE: SQLite TEXT columns store UTF-8. ISO-8859-1 characters U+0080-U+00FF
+    //       are multi-byte in UTF-8, but the mapping is reversible.
+    //       The NULL byte (0x00) is a known limitation of TEXT columns.
+    // =========================================================================
+    static void testRawBytesThroughTextColumn(OrmaDatabase orma) {
+        System.out.println("\n--- Test: Raw Bytes Through TEXT Column (ISO-8859-1) ---");
+        try {
+            // Clean up before test
+            orma.deleteFromPerson().execute();
+
+            // --- Test 17a: All non-NULL byte values (0x01 to 0xFF) ---
+            // ISO-8859-1 maps each byte value directly to the same Unicode code point.
+            // Byte 0x41 → char U+0041 ('A'), Byte 0xFF → char U+00FF ('ÿ')
+            // We skip 0x00 because SQLite TEXT may truncate at NULL bytes.
+            byte[] allBytesNoNull = new byte[255];
+            for (int i = 0; i < 255; i++) {
+                allBytesNoNull[i] = (byte) (i + 1); // 0x01, 0x02, ..., 0xFF
+            }
+
+            // Encode raw bytes as a String using ISO-8859-1 (1:1 byte-to-char mapping)
+            String binaryAsString = new String(allBytesNoNull, StandardCharsets.ISO_8859_1);
+
+            // Store through Sorma2's normal ORM API
+            Person pAll = new Person();
+            pAll.name = binaryAsString;
+            pAll.address = "all bytes 0x01-0xFF";
+            pAll.social_number = 1;
+            long rowIdAll = orma.insertIntoPerson(pAll);
+            assertCondition("Insert 255 raw bytes via ISO-8859-1", rowIdAll > 0);
+
+            // Read back through Sorma2 and decode back to bytes
+            List<Person> allResults = orma.selectFromPerson().idEq(rowIdAll).toList();
+            String readString = allResults.get(0).name;
+            byte[] readBytes = readString.getBytes(StandardCharsets.ISO_8859_1);
+
+            assertCondition("All 255 non-NULL bytes survive TEXT round-trip",
+                java.util.Arrays.equals(allBytesNoNull, readBytes));
+            assertCondition("Byte array length preserved (255)",
+                readBytes.length == 255);
+
+            // Verify specific byte values survived correctly
+            assertCondition("Byte 0x01 preserved", readBytes[0] == 0x01);
+            assertCondition("Byte 0x7F preserved (DEL)", readBytes[126] == 0x7F);
+            assertCondition("Byte 0x80 preserved (first multi-byte UTF-8)", readBytes[127] == (byte) 0x80);
+            assertCondition("Byte 0xFF preserved", readBytes[254] == (byte) 0xFF);
+
+            // --- Test 17b: NULL byte (0x00) behavior ---
+            // SQLite TEXT columns may truncate at NULL bytes.
+            // This test documents the behavior without asserting pass/fail.
+            byte[] withNull = new byte[] { 0x41, 0x42, 0x00, 0x43, 0x44 }; // "AB\0CD"
+            String nullString = new String(withNull, StandardCharsets.ISO_8859_1);
+
+            Person pNull = new Person();
+            pNull.name = nullString;
+            pNull.address = "null byte test";
+            pNull.social_number = 2;
+            long rowIdNull = orma.insertIntoPerson(pNull);
+            assertCondition("Insert with NULL byte doesn't crash", rowIdNull > 0);
+
+            List<Person> nullResults = orma.selectFromPerson().idEq(rowIdNull).toList();
+            String nullRead = nullResults.get(0).name;
+            byte[] nullBytes = nullRead.getBytes(StandardCharsets.ISO_8859_1);
+
+            boolean nullSurvived = java.util.Arrays.equals(withNull, nullBytes);
+            if (nullSurvived) {
+                System.out.println("  [INFO] NULL byte (0x00) survived in TEXT column");
+            } else {
+                System.out.println("  [INFO] NULL byte (0x00) was truncated/lost in TEXT column");
+                System.out.println("  [INFO] Data after NULL: got " + nullBytes.length + " bytes, expected " + withNull.length);
+                System.out.println("  [INFO] This is a known SQLite TEXT limitation - use BLOB for binary with 0x00");
+            }
+            // We only assert that it didn't crash, not that NULL survived
+            assertCondition("NULL byte test completed without crash", true);
+
+            // --- Test 17c: Random binary payload (2KB, no NULL bytes) ---
+            // Generate random bytes excluding 0x00 to test realistic binary data
+            Random rng = new Random(777);
+            byte[] randomNoNull = new byte[2048];
+            for (int i = 0; i < randomNoNull.length; i++) {
+                int b;
+                do {
+                    b = rng.nextInt(256);
+                } while (b == 0); // Skip NULL byte
+                randomNoNull[i] = (byte) b;
+            }
+
+            // Encode and store through Sorma2
+            String randomStr = new String(randomNoNull, StandardCharsets.ISO_8859_1);
+            Person pRandom = new Person();
+            pRandom.name = randomStr;
+            pRandom.address = "random binary no-null";
+            pRandom.social_number = 3;
+            long rowIdRandom = orma.insertIntoPerson(pRandom);
+            assertCondition("Insert 2KB random binary via TEXT", rowIdRandom > 0);
+
+            // Read back and verify
+            List<Person> randomResults = orma.selectFromPerson().idEq(rowIdRandom).toList();
+            byte[] randomRead = randomResults.get(0).name.getBytes(StandardCharsets.ISO_8859_1);
+
+            assertCondition("2KB random binary survives TEXT round-trip",
+                java.util.Arrays.equals(randomNoNull, randomRead));
+            assertCondition("2KB random binary length preserved",
+                randomRead.length == 2048);
+
+            // --- Test 17d: Repeated pattern binary (detects truncation) ---
+            // A repeating pattern makes truncation or corruption obvious
+            byte[] pattern = new byte[1024];
+            for (int i = 0; i < pattern.length; i++) {
+                pattern[i] = (byte) ((i % 255) + 1); // Repeating 0x01-0xFF pattern
+            }
+
+            String patternStr = new String(pattern, StandardCharsets.ISO_8859_1);
+            Person pPattern = new Person();
+            pPattern.name = patternStr;
+            pPattern.address = "repeating pattern";
+            pPattern.social_number = 4;
+            long rowIdPattern = orma.insertIntoPerson(pPattern);
+
+            List<Person> patternResults = orma.selectFromPerson().idEq(rowIdPattern).toList();
+            byte[] patternRead = patternResults.get(0).name.getBytes(StandardCharsets.ISO_8859_1);
+
+            assertCondition("Repeating pattern binary preserved",
+                java.util.Arrays.equals(pattern, patternRead));
+
+            // Verify the pattern is actually repeating correctly
+            boolean patternIntact = true;
+            for (int i = 0; i < patternRead.length; i++) {
+                if (patternRead[i] != (byte) ((i % 255) + 1)) {
+                    patternIntact = false;
+                    break;
+                }
+            }
+            assertCondition("Pattern sequence verified byte-by-byte", patternIntact);
+
+            // --- Test 17e: Binary in multiple fields simultaneously ---
+            // Store different binary data in name and address fields
+            byte[] nameBytes = new byte[512];
+            byte[] addrBytes = new byte[512];
+            rng.nextBytes(nameBytes);
+            rng.nextBytes(addrBytes);
+            // Remove NULL bytes from both
+            for (int i = 0; i < nameBytes.length; i++) { if (nameBytes[i] == 0) nameBytes[i] = 1; }
+            for (int i = 0; i < addrBytes.length; i++) { if (addrBytes[i] == 0) addrBytes[i] = 1; }
+
+            Person pMulti = new Person();
+            pMulti.name = new String(nameBytes, StandardCharsets.ISO_8859_1);
+            pMulti.address = new String(addrBytes, StandardCharsets.ISO_8859_1);
+            pMulti.social_number = 5;
+            long rowIdMulti = orma.insertIntoPerson(pMulti);
+
+            List<Person> multiResults = orma.selectFromPerson().idEq(rowIdMulti).toList();
+            byte[] nameRead = multiResults.get(0).name.getBytes(StandardCharsets.ISO_8859_1);
+            byte[] addrRead = multiResults.get(0).address.getBytes(StandardCharsets.ISO_8859_1);
+
+            assertCondition("Binary in name field preserved", java.util.Arrays.equals(nameBytes, nameRead));
+            assertCondition("Binary in address field preserved", java.util.Arrays.equals(addrBytes, addrRead));
+
+            // Cleanup
+            orma.deleteFromPerson().execute();
+
+        } catch (Exception e) {
+            assertCondition("Raw bytes through TEXT test failed", false);
             e.printStackTrace();
         }
     }
