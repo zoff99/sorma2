@@ -96,6 +96,12 @@ public class SormaUnitTest {
         TestRawBytesText.run(orma);
         TestColumnNameMatching.run(orma);
         TestBooleanHandling.run(orma);
+        TestDeleteWithWhere.run(orma);
+        TestCountWithWhere.run(orma);
+        TestLikePatternInjection.run(orma);
+        TestTransactionRollback.run(orma);
+        TestMultiColumnOrderBy.run(orma);
+        TestRapidLifecycle.run(orma);
 
         // MUST be last: this test shuts down and reopens the DB
         TestRapidOpenClose.run(orma);
