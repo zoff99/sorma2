@@ -1,5 +1,5 @@
 # Path to the JDBC driver located in the parent repo's test/ directory
-JDBC_JAR = test/sqlite-jdbc-3.53.4.0.jar
+JDBC_JAR = test/sqlite-jdbc-3.54.1.0.jar
 
 all: run
 
